@@ -105,14 +105,14 @@ function msv(i){const n=$('mn').value.trim();if(!n){T('品目名を入力して�
 function mdl(i){if(S.ic!==i){S.ic=i;R(1);return}S.it.splice(i,1);S.ie=-1;S.ic=-1;R(1);T('削除しました')}
 function gren(){const n=E($('gr').value.trim());if(!n)return;S.it.forEach(x=>{if(x.g==S.gf)x.g=n});S.gf=n;R(1);T('ジャンル名を変更しました')}
 function ai(){const n=$('in').value.trim(),v=V('ip'),m=$('ix').value,r=+$('ir').value,c=V('ic')||1,q=V('iq')||1,u=E($('iu').value.trim()),sh=E($('ish').value.trim());if(!n){T('品目名を入力してください');return}const rc={p:tx(v,m,r),d:D(),in:v,tx:m,r};if(c!=1||q!=1||u){rc.cap=c;rc.n=q;rc.u=u}if(sh)rc.shop=sh;S.it.push({n:E(n),g:E($('ig').value.trim()||'未分類'),tm:m,tr:r,u,h:v?[rc]:[]});R(1);T('品目を追加しました')}
-function ast(){const L=S.as.slice(-12),m=Math.max(1,...L.map(x=>x.a+x.b)),l=S.as[S.as.length-1]||{a:0,b:0},pv=S.as[S.as.length-2]||{a:0,b:0},tot=l.a+l.b,d=tot-pv.a-pv.b,goal=S.goal,due=new Date().getDate()>=S.day&&l.m!=cm();
+function ast(){const L=S.as.slice(-12),m=Math.max(1,...L.map(x=>x.a+x.b)),l=S.as[S.as.length-1]||{a:0,b:0},pv=S.as[S.as.length-2]||{a:0,b:0},tot=l.a+l.b,d=tot-pv.a-pv.b,goal=S.goal,due=new Date().getDate()>=S.day&&!fe(new Date().getFullYear(),new Date().getMonth()+1);
 return`<div class="c"><h3>ふたりの貯金（毎月${S.day}日に入力）</h3><div class="big">${Y(tot)}</div><div class="s">${S.as.length>1?`前月より <b class="${d>=0?'ok':'B'}">${d>=0?'+':''}${Y(d)}</b>`:'毎月の残高を入れると、前月との差が出ます'}</div>${due?'<div class="s" style="color:#d9544f;margin-top:4px">'+cm()+'の残高がまだ入力されていません（入力日：毎月'+S.day+'日）</div>':''}<div class="cols">${L.map(x=>`<div><u style="height:${x.b/m*100}%"></u><b style="height:${x.a/m*100}%"></b>${x.m}</div>`).join('')}</div><div class="s"><span class="A">■</span>${N.a}　<span class="B">■</span>${N.b}</div></div>
 <div class="c"><h3>目標 ${Y(goal)}まで</h3><div style="height:10px;border-radius:5px;background:var(--bg)"><div style="height:10px;border-radius:5px;background:var(--ok);width:${Math.min(100,tot/goal*100)}%"></div></div><div class="s" style="margin-top:6px">${goal>tot?'あと '+Y(goal-tot)+'（'+Math.round(tot/goal*100)+'%）':'目標達成！ '+Math.round(tot/goal*100)+'%'}</div></div>
 ${brk()}${accForm()}${ahist()}`}
 function yrs(){const A=S.as,n=A.length,y=[];if(!n)return y;y[n-1]=fy(parseInt(A[n-1].m));for(let i=n-2;i>=0;i--)y[i]=parseInt(A[i].m)>parseInt(A[i+1].m)?y[i+1]-1:y[i+1];return y}
 function ahist(){const A=S.as;if(!A.length)return'';const ys=yrs(),tot=x=>x.a+x.b;
 const rows=A.map((x,i)=>({x,i})).reverse().map(({x,i})=>{const d=i?tot(x)-tot(A[i-1]):null;
-const head=`<div class="l r" onclick="S.ae=${S.ae===i?-1:i};S.ag=0;S.ad=-1;R(1)"><div><b>${ys[i]}年${x.m}</b><div class="s"><span class="A">${N.a} ${Y(x.a)}</span>　<span class="B">${N.b} ${Y(x.b)}</span></div></div><div style="text-align:right"><b>${Y(tot(x))}</b><div class="s ${d==null?'':d>=0?'ok':'B'}">${d==null?'':(d>=0?'+':'')+Y(d)}</div></div></div>`;
+const head=`<div class="l r" onclick="S.ae=${S.ae===i?-1:i};S.ag=0;S.ad=-1;R(1)"><div><b>${x.y||ys[i]}年${x.m}</b><div class="s"><span class="A">${N.a} ${Y(x.a)}</span>　<span class="B">${N.b} ${Y(x.b)}</span></div></div><div style="text-align:right"><b>${Y(tot(x))}</b><div class="s ${d==null?'':d>=0?'ok':'B'}">${d==null?'':(d>=0?'+':'')+Y(d)}</div></div></div>`;
 return S.ae===i?head+adet(x,i):head}).join('');
 return`<div class="c"><h3>過去の履歴（${A.length}か月分）</h3><div class="s">月をタップすると、内訳の確認・修正・削除ができます</div>${rows}</div>`}
 function adet(x,i){const gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)',nmh=k=>`<div class="s" style="font-weight:700;margin:8px 0 2px"><span class="${k=='a'?'A':'B'}">${N[k]}</span></div>`;
@@ -123,16 +123,19 @@ if(a+b<=0){T('金額を入力してください');return}Object.assign(x,{a,b});
 function adl(i){if(S.ad!==i){S.ad=i;R(1);return}S.as.splice(i,1);S.ae=-1;S.ag=0;S.ad=-1;R(1);T('削除しました')}
 let AV={a:5,b:5};
 const vis=(k,x)=>{let m=Math.max(5,AV[k]);S.acc[k].forEach((n,i)=>{if(n!==DEF[i]||(x&&x['d'+k]&&x['d'+k][i]))m=Math.max(m,i+1)});return Math.min(10,m)};
-function accForm(){const l=S.as[S.as.length-1],cur=l&&l.m==cm()?l:null,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)',vv=k=>Math.max(vis(k,cur),vis(k,l));
-const blk=k=>{const n0=vv(k);return`<div class="s" style="font-weight:700;margin:12px 0 2px"><span class="${k=='a'?'A':'B'}">${N[k]}</span>の口座（口座名も変更できます）</div>`+S.acc[k].slice(0,n0).map((n,i)=>`<div class="g" style="grid-template-columns:3fr 2fr;margin:4px 0"><input id="${k}n${i}" value="${n}" maxlength="12" placeholder="口座名"><input id="${k}v${i}" type="number" inputmode="numeric" placeholder="${l&&l['d'+k]&&l['d'+k][i]!=null?Y(l['d'+k][i]).replace('¥',''):'残高'}" value="${cur&&cur['d'+k]&&cur['d'+k][i]?cur['d'+k][i]:''}"></div>`).join('')+(n0<10?`<button style="${gh}" onclick="AV.${k}=${n0+1};R(1)">＋ 口座を追加（${N[k]}：あと${10-n0}件）</button>`:'')};
-return`<div class="c"><h3>${cm()}の残高を入力</h3>${blk('a')}${blk('b')}<button onclick="sv()">${cm()}分を保存</button></div>`}
+let AM='';
+const mkey=(y,m)=>y+'/'+m,ck=()=>{const t=new Date();return mkey(t.getFullYear(),t.getMonth()+1)},fe=(y,m)=>S.as.find(e=>e.y==y&&parseInt(e.m)==m);
+function accForm(){const sk=AM||ck(),[sy,sm]=sk.split('/').map(Number),cur=fe(sy,sm),prev=S.as.filter(e=>e.y*12+parseInt(e.m)<sy*12+sm).pop()||null,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)',vv=k=>Math.max(vis(k,cur),vis(k,prev));
+const t=new Date(),opts=[];for(let k=0;k<60;k++){const d=new Date(t.getFullYear(),t.getMonth()-k,1),y=d.getFullYear(),m=d.getMonth()+1,key=mkey(y,m);opts.push(`<option value="${key}"${key==sk?' selected':''}>${y}年${m}月${k==0?'（今月）':''}${fe(y,m)?'（入力済み）':''}</option>`)}
+const blk=k=>{const n0=vv(k);return`<div class="s" style="font-weight:700;margin:12px 0 2px"><span class="${k=='a'?'A':'B'}">${N[k]}</span>の口座（口座名も変更できます）</div>`+S.acc[k].slice(0,n0).map((n,i)=>`<div class="g" style="grid-template-columns:3fr 2fr;margin:4px 0"><input id="${k}n${i}" value="${n}" maxlength="12" placeholder="口座名"><input id="${k}v${i}" type="number" inputmode="numeric" placeholder="${prev&&prev['d'+k]&&prev['d'+k][i]!=null?Y(prev['d'+k][i]).replace('¥',''):'残高'}" value="${cur&&cur['d'+k]&&cur['d'+k][i]?cur['d'+k][i]:''}"></div>`).join('')+(n0<10?`<button style="${gh}" onclick="AV.${k}=${n0+1};R(1)">＋ 口座を追加（${N[k]}：あと${10-n0}件）</button>`:'')};
+return`<div class="c"><h3>残高を入力</h3><label>対象の月（過去の月も選べます）</label><select id="am" onchange="AM=this.value;R(1)">${opts.join('')}</select>${blk('a')}${blk('b')}<button onclick="sv()">${sy}年${sm}月分を保存</button></div>`}
 function brk(){const l=S.as[S.as.length-1];if(!l||!l.da)return'';
 const blk=k=>`<div><div class="${k=='a'?'A':'B'}" style="font-weight:700;margin-bottom:4px">${N[k]}　${Y(l['d'+k].reduce((n,v)=>n+v,0))}</div>`+l['d'+k].map((v,i)=>v?`<div class="r s"><span>${S.acc[k][i]}</span><b>${Y(v)}</b></div>`:'').join('')+'</div>';
-return`<div class="c"><h3>${l.m}の内訳</h3><div class="g" style="gap:14px">${blk('a')}${blk('b')}</div></div>`}
-function sv(){const m=cm(),l=S.as[S.as.length-1],cur=l&&l.m==m?l:null,na={a:[],b:[]},vs={a:[],b:[]};
+return`<div class="c"><h3>${l.y?l.y+'年':''}${l.m}の内訳</h3><div class="g" style="gap:14px">${blk('a')}${blk('b')}</div></div>`}
+function sv(){const sk=AM||ck(),[sy,sm]=sk.split('/').map(Number),cur=fe(sy,sm),na={a:[],b:[]},vs={a:[],b:[]};
 ['a','b'].forEach(k=>{for(let i=0;i<10;i++){const el=$(k+'n'+i);na[k].push(el?E(el.value.trim()||'口座'+(i+1)):S.acc[k][i]);vs[k].push(el?V(k+'v'+i):(cur&&cur['d'+k]?cur['d'+k][i]||0:0))}});
 const a=vs.a.reduce((n,v)=>n+v,0),b=vs.b.reduce((n,v)=>n+v,0);if(a+b<=0){T('残高を入力してください');return}
-S.acc=na;const e={m,a,b,da:vs.a,db:vs.b};if(l&&l.m==m)Object.assign(l,e);else S.as.push(e);R();T(m+'分を保存しました')}
+S.acc=na;const e={y:sy,m:sm+'月',a,b,da:vs.a,db:vs.b};if(cur)Object.assign(cur,e);else{S.as.push(e);ny()}R();T(sy+'年'+sm+'月分を保存しました')}
 function fix(){const t={a:0,b:0},on=S.fx.filter(f=>!f.off);on.forEach(f=>{if(f.p=='h'){t.a+=f.v/2;t.b+=f.v/2}else t[f.p]+=f.v});const td=new Date().getDate(),by=S.fs=='v'?(x,y)=>y.v-x.v:(x,y)=>x.d-y.d,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)';
 const sel=p=>`<option value="h"${p=='h'?' selected':''}>半々</option><option value="a"${p=='a'?' selected':''}>${N.a}のみ</option><option value="b"${p=='b'?' selected':''}>${N.b}のみ</option>`;
 const qs=q=>`<option value="a"${q=='a'?' selected':''}>${N.a}</option><option value="b"${q=='b'?' selected':''}>${N.b}</option>`;
@@ -152,9 +155,9 @@ function csvO(){const L=[],w=(...a)=>L.push(a.map(Q).join(','));
 w('#設定');w('1人目の名前','2人目の名前','残高入力日','貯金目標');w(U(N.a),U(N.b),S.day,S.goal);
 w('#記録');w('日付','店名','1人目だけの分','2人目だけの分','半々の分','払った人');S.led.forEach(e=>w(e.d,U(e.s),e.a,e.b,e.h,pn(e.p)));
 w('#相場');w('ジャンル','品目','日付','価格（税込）','入力額','入力時の区分','税率','容量','単位','個数','お店');S.it.forEach(x=>{if(x.h.length)x.h.forEach(r=>w(U(x.g),U(x.n),r.d,r.p,r.in||r.p,r.tx=='ex'?'税抜':'税込',r.r||10,r.cap||'',U(r.u||''),r.n||'',U(r.shop||'')));else w(U(x.g),U(x.n),'','','','','','','','','')});
-w('#資産');w('月','1人目の合計','2人目の合計');S.as.forEach(x=>w(x.m,x.a,x.b));
+w('#資産');w('月','1人目の合計','2人目の合計');S.as.forEach(x=>w(x.y+'年'+x.m,x.a,x.b));
 w('#口座名');w('持ち主','番号','口座名');['a','b'].forEach(k=>S.acc[k].forEach((n,i)=>w(pn(k),i+1,U(n))));
-w('#口座残高');w('月','持ち主','番号','残高');S.as.forEach(x=>{if(x.da)['a','b'].forEach(k=>x['d'+k].forEach((v,i)=>{if(v)w(x.m,pn(k),i+1,v)}))});
+w('#口座残高');w('月','持ち主','番号','残高');S.as.forEach(x=>{if(x.da)['a','b'].forEach(k=>x['d'+k].forEach((v,i)=>{if(v)w(x.y+'年'+x.m,pn(k),i+1,v)}))});
 w('#固定費');w('名前','引落日','金額','負担','状態','払う人');S.fx.forEach(f=>w(U(nm(f.n)),f.d,f.v,pn(f.p),f.off?'停止':'有効',pn(f.q)));
 return L.join('\r\n')}
 function csvP(t){const R=[];let r=[],c='',q=0;t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h=='"'){if(t[i+1]=='"'){c+='"';i++}else q=0}else c+=h}else if(h=='"')q=1;else if(h==',')r.push(c),c='';else if(h=='\n'||h=='\r'){if(h=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';R.push(r);r=[]}else c+=h}
@@ -164,9 +167,10 @@ const n=v=>Math.max(0,+String(v).replace(/[,，¥円\s]/g,'')||0),pf=v=>v=='半�
 if(o['設定']&&o['設定'][0]){const s=o['設定'][0];if(s[0]&&s[1]&&s[0]!=s[1])P.N={a:E(s[0]),b:E(s[1])};P.day=Math.min(31,Math.max(1,n(s[2])||25));P.goal=n(s[3])||2000000}
 if(o['記録'])P.led=o['記録'].filter(r=>r.length>=5).map(r=>({d:dt(r[0]),s:E(r[1]),a:n(r[2]),b:n(r[3]),h:n(r[4]),p:pf(r[5])=='b'?'b':'a'}));
 if(o['相場']){const m=new Map();o['相場'].forEach(r=>{if(!r[1])return;const key=r[0]+'\u0001'+r[1];if(!m.has(key))m.set(key,{n:E(r[1]),g:E(r[0]||'未分類'),tm:'in',tr:/食品/.test(r[0])?8:10,u:'',h:[]});if(n(r[3])){const it=m.get(key),o={p:n(r[3]),d:dt(r[2]),in:n(r[4])||n(r[3]),tx:r[5]=='税抜'?'ex':'in',r:n(r[6])||10};if(n(r[7])){o.cap=n(r[7]);o.u=E(String(r[8]||'').trim());it.u=it.u||o.u;if(n(r[9]))o.n=n(r[9])}if(String(r[10]||'').trim())o.shop=E(String(r[10]).trim());it.h.push(o)}});P.it=[...m.values()]}
-if(o['資産'])P.as=o['資産'].filter(r=>r[0]).map(r=>({m:E(String(r[0]).trim()),a:n(r[1]),b:n(r[2])}));
+if(o['資産']){const pm=v=>{v=String(v).trim();const t=v.match(/^(\d{4})\D+(\d{1,2})/);if(t)return{y:+t[1],m:(+t[2])+'月',k:v};const u=v.match(/(\d{1,2})/);return{m:u?(+u[1])+'月':E(v),k:v}};P.as=o['資産'].filter(r=>r[0]).map(r=>({...pm(r[0]),a:n(r[1]),b:n(r[2])}))}
 if(o['口座名']){P.acc={a:S.acc.a.slice(),b:S.acc.b.slice()};o['口座名'].forEach(r=>{const k=pf(r[0])=='b'?'b':'a',i=n(r[1])-1;if(i>=0&&i<10&&r[2])P.acc[k][i]=E(r[2])})}
-if(o['口座残高']&&P.as)o['口座残高'].forEach(r=>{const x=P.as.find(y=>y.m==String(r[0]).trim()),k=pf(r[1])=='b'?'b':'a',i=n(r[2])-1;if(!x||i<0||i>9)return;x.da=x.da||Array(10).fill(0);x.db=x.db||Array(10).fill(0);x['d'+k][i]=n(r[3])});
+if(o['口座残高']&&P.as)o['口座残高'].forEach(r=>{const x=P.as.find(y=>y.k==String(r[0]).trim()),k=pf(r[1])=='b'?'b':'a',i=n(r[2])-1;if(!x||i<0||i>9)return;x.da=x.da||Array(10).fill(0);x.db=x.db||Array(10).fill(0);x['d'+k][i]=n(r[3])});
+if(P.as)P.as.forEach(x=>delete x.k);
 if(o['固定費'])P.fx=o['固定費'].filter(r=>r[0]).map(r=>({n:E(r[0]),d:Math.min(31,Math.max(1,n(r[1])||1)),v:n(r[2]),p:pf(r[3]),off:r[4]=='停止',q:r[5]?(pf(r[5])=='b'?'b':'a'):(pf(r[3])=='b'?'b':'a')}));
 return Object.keys(P).length?P:null}
 async function cfile(el){const f=el.files[0];if(!f)return;const b=await f.arrayBuffer();let t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(e){t=new TextDecoder('shift_jis').decode(b)}
@@ -231,7 +235,8 @@ async function lo(){try{await sb.auth.signOut()}catch(e){}try{localStorage.remov
 function cshow(){const o=$('imp');if(!o)return;o.innerHTML='<div>下の内容をコピーして、メモなどに貼り付けて保存できます。.csv ファイルにすると、そのまま読み込めます。</div><textarea readonly style="width:100%;height:140px;margin-top:6px;font-size:12px">'+E(csvO())+'</textarea>'}
 function cex(){const f=new Date(),nmf='futari-no-saifu-'+f.getFullYear()+p2(f.getMonth()+1)+p2(f.getDate())+'.csv';
 try{const u=URL.createObjectURL(new Blob(['\uFEFF'+csvO()],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=nmf;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);T('書き出しました')}catch(e){cshow()}}
-function nacc(){['a','b'].forEach(k=>{S.acc[k]=(S.acc[k]||[]).slice(0,10);while(S.acc[k].length<10)S.acc[k].push(DEF[S.acc[k].length])});S.as.forEach(x=>{if(x.da){while(x.da.length<10)x.da.push(0);while(x.db.length<10)x.db.push(0)}})}
+function ny(){const ys=yrs();S.as.forEach((x,i)=>{if(!x.y)x.y=ys[i]});S.as.sort((a,b)=>a.y*12+parseInt(a.m)-(b.y*12+parseInt(b.m)))}
+function nacc(){['a','b'].forEach(k=>{S.acc[k]=(S.acc[k]||[]).slice(0,10);while(S.acc[k].length<10)S.acc[k].push(DEF[S.acc[k].length])});S.as.forEach(x=>{if(x.da){while(x.da.length<10)x.da.push(0);while(x.db.length<10)x.db.push(0)}});ny()}
 const capt=r=>{const c=r.cap||1,n=r.n||1,u=r.u||'';if(c==1&&n==1)return'';const pm=/^(ml|mL|g|ｇ|ｍｌ)$/.test(u),per=pm?100:1,v=Math.round(r.p/(c*n)*per*10)/10,uu=u||'個',lab=c==1?n+uu:c+uu+(n!=1?'×'+n:'');return lab+'・¥'+v.toLocaleString('ja-JP')+'/'+(pm?'100':'')+uu};
 async function ccopy(){const c=SY.code;try{await navigator.clipboard.writeText(c);T('招待コードをコピーしました')}catch(e){try{const t=document.createElement('textarea');t.value=c;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();T(ok?'招待コードをコピーしました':'コピーできませんでした。コードを長押ししてコピーしてください')}catch(e2){T('コピーできませんでした。コードを長押ししてコピーしてください')}}}
 function R(k){const ac=ap();opt=`<option value="a">${N.a}</option><option value="b">${N.b}</option>`;save();$('v').innerHTML=[led,calc,mkt,ast,fix,set,hist][S.tab]();$('t').innerHTML=['記録','計算','相場','資産','固定費'].map((x,i)=>`<span class="${i==(S.tab==6?0:S.tab)?'on':''}" onclick="go(${i})">${x}</span>`).join('');k||scrollTo(0,0);if(ac)T('固定費'+ac+'件を記録に追加しました')}
