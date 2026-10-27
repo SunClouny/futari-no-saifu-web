@@ -173,12 +173,12 @@ function adl(i){if(S.ad!==i){S.ad=i;R(1);return}S.as.splice(i,1);S.ae=-1;S.ag=0;
 let AV={a:5,b:5};
 const vis=(k,x)=>{let m=Math.max(5,AV[k]);S.acc[k].forEach((n,i)=>{if(n!==DEF[i]||(x&&x['d'+k]&&x['d'+k][i]))m=Math.max(m,i+1)});return Math.min(10,m)};
 let AM='',DR={},NC=0;
-function cap(){const e=$('am');if(!e)return;const v={};document.querySelectorAll('#v input[id]').forEach(i=>{if(/^[ab][nv]\d$/.test(i.id))v[i.id]=i.value});DR[e.value]=v}
+function cap(){const e=$('am');if(!e)return;const v={};document.querySelectorAll('#v input[id]').forEach(i=>{if(/^[ab][nv]\d$/.test(i.id))v[i.id]=i.value});DR[e.dataset.month||e.value]=v}
 const mkey=(y,m)=>y+'/'+m,ck=()=>{const t=new Date();return mkey(t.getFullYear(),t.getMonth()+1)},fe=(y,m)=>S.as.find(e=>e.y==y&&parseInt(e.m)==m);
 function accForm(){const sk=AM||ck(),[sy,sm]=sk.split('/').map(Number),cur=fe(sy,sm),prev=S.as.filter(e=>e.y*12+parseInt(e.m)<sy*12+sm).pop()||null,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)',vv=k=>Math.max(vis(k,cur),vis(k,prev)),dr=DR[sk],dv=(id,d)=>dr&&id in dr?E(dr[id]):d;
 const t=new Date(),opts=[];for(let k=0;k<60;k++){const d=new Date(t.getFullYear(),t.getMonth()-k,1),y=d.getFullYear(),m=d.getMonth()+1,key=mkey(y,m);opts.push(`<option value="${key}"${key==sk?' selected':''}>${y}年${m}月${k==0?'（今月）':''}${fe(y,m)?'（入力済み）':''}</option>`)}
 const blk=k=>{const n0=vv(k);return`<div class="s" style="font-weight:700;margin:12px 0 2px"><span class="${k=='a'?'A':'B'}">${N[k]}</span>の口座（口座名も変更できます）</div>`+S.acc[k].slice(0,n0).map((n,i)=>`<div class="g" style="grid-template-columns:3fr 2fr;margin:4px 0"><input id="${k}n${i}" value="${dv(k+'n'+i,n)}" maxlength="12" placeholder="口座名"><input id="${k}v${i}" type="number" inputmode="numeric" placeholder="${prev&&prev['d'+k]&&prev['d'+k][i]!=null?Y(prev['d'+k][i]).replace('¥',''):'残高'}" value="${dv(k+'v'+i,cur&&cur['d'+k]&&cur['d'+k][i]?cur['d'+k][i]:'')}"></div>`).join('')+(n0<10?`<button style="${gh}" onclick="AV.${k}=${n0+1};R(1)">＋ 口座を追加（${N[k]}：あと${10-n0}件）</button>`:'')};
-return`<div class="c"><h3>残高を入力</h3><label>対象の月（過去の月も選べます）</label><select id="am" onchange="AM=this.value;R(1)">${opts.join('')}</select>${blk('a')}${blk('b')}<button onclick="sv()">${sy}年${sm}月分を保存</button></div>`}
+return`<div class="c"><h3>残高を入力</h3><label>対象の月（過去の月も選べます）</label><select id="am" data-month="${sk}" onchange="AM=this.value;R(1)">${opts.join('')}</select>${blk('a')}${blk('b')}<button onclick="sv()">${sy}年${sm}月分を保存</button></div>`}
 function brk(){const l=S.as[S.as.length-1];if(!l||!l.da)return'';
 const blk=k=>`<div><div class="${k=='a'?'A':'B'}" style="font-weight:700;margin-bottom:4px">${N[k]}　${Y(l['d'+k].reduce((n,v)=>n+v,0))}</div>`+l['d'+k].map((v,i)=>v?`<div class="r s"><span>${S.acc[k][i]}</span><b>${Y(v)}</b></div>`:'').join('')+'</div>';
 return`<div class="c"><h3>${l.y?l.y+'年':''}${l.m}の内訳</h3><div class="g" style="gap:14px">${blk('a')}${blk('b')}</div></div>`}
@@ -195,41 +195,43 @@ const so=(k,l)=>`<a onclick="S.fs='${k}';R(1)" style="${(S.fs=='v')==(k=='v')?'f
 return`<div class="c"><h3>毎月の固定費</h3><div class="big">${Y(t.a+t.b)}</div><div class="r s"><span class="A">${N.a} ${Y(t.a)}</span><span class="B">${N.b} ${Y(t.b)}</span></div><div class="s" style="margin-top:4px">1年あたり ${Y((t.a+t.b)*12)}</div></div>
 <div class="c"><div class="r"><h3 style="margin:0">一覧（${on.length}件）</h3><span class="s">並び順：${so('d','引落日')}｜${so('v','金額')}</span></div><div class="s">項目をタップすると修正・一時停止・削除ができます</div>${rows}</div>
 <div class="c"><h3>固定費を追加</h3><label>名前</label><input id="fn"><div class="g"><div><label>引落日</label><input id="fd" type="number" inputmode="numeric"></div><div><label>金額</label><input id="fv" type="number" inputmode="numeric"></div></div><label>負担</label><select id="fp" onchange="if(this.value!='h')$('fq').value=this.value">${sel('h')}</select><label>払う人（引落元）</label><select id="fq">${opt}</select><button onclick="af()">追加する</button></div>`}
-function fsv(i){const d=V('ed'),v=V('ev');if(!v||d<1||d>31){T('金額と引落日（1〜31）を入力してください');return}Object.assign(S.fx[i],{n:E($('en').value.trim()||'（名称なし）'),d,v,p:$('ep').value,q:$('eq').value,from:D()});S.fe=-1;R(1);T('修正しました')}
+function fsv(i){const d=V('ed'),v=V('ev');if(!v||!Number.isInteger(d)||d<1||d>31){T('金額と引落日（1〜31の整数）を入力してください');return}Object.assign(S.fx[i],{n:E($('en').value.trim()||'（名称なし）'),d,v,p:$('ep').value,q:$('eq').value,from:D()});S.fe=-1;R(1);T('修正しました')}
 function fof(i){S.fx[i].off=!S.fx[i].off;if(!S.fx[i].off)S.fx[i].from=D();S.fe=-1;R(1);T(S.fx[i].off?'一時停止にしました':'再開しました')}
 function fdl(i){if(S.fc!==i){S.fc=i;R(1);return}S.fx.splice(i,1);S.fe=-1;S.fc=-1;R(1);T('削除しました')}
-function af(){const d=V('fd'),v=V('fv');if(!v||d<1||d>31){T('金額と引落日（1〜31）を入力してください');return}S.fx.push({id:uid(),n:E($('fn').value.trim()||'（名称なし）'),d,v,p:$('fp').value,q:$('fq').value,from:D()});R(1);T('追加しました')}
+function af(){const d=V('fd'),v=V('fv');if(!v||!Number.isInteger(d)||d<1||d>31){T('金額と引落日（1〜31の整数）を入力してください');return}S.fx.push({id:uid(),n:E($('fn').value.trim()||'（名称なし）'),d,v,p:$('fp').value,q:$('fq').value,from:D()});R(1);T('追加しました')}
 let PD=null;
 const U=s=>String(s).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&amp;/g,'&'),Q=v=>{v=String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},pn=p=>p=='h'?'半々':p=='a'?'1人目':'2人目';
 function csvO(){const L=[],w=(...a)=>L.push(a.map(Q).join(','));
 w('#設定');w('1人目の名前','2人目の名前','残高入力日','貯金目標','1人目の色','2人目の色');w(U(N.a),U(N.b),S.day,S.goal,S.colors.a||'',S.colors.b||'');
 w('#負担割合');w('適用開始日','1人目の割合（％）');S.share.forEach(x=>w(x.from,x.a));
-w('#記録');w('日付','店名','1人目だけの金額','2人目だけの金額','ふたりで負担する金額','払った人','適用した1人目の割合（％）');S.led.forEach(e=>w(e.d,U(e.s),e.a,e.b,e.h,pn(e.p),e.r===undefined?'':entryRate(e)));
+w('#記録');w('日付','店名','1人目だけの金額','2人目だけの金額','ふたりで負担する金額','払った人','適用した1人目の割合（％）','固定費の自動記録','固定費の記録キー');S.led.forEach(e=>w(e.d,U(e.s),e.a,e.b,e.h,pn(e.p),e.r===undefined?'':entryRate(e),e.fx?'はい':'',e.fxkey||''));
 w('#相場');w('ジャンル','品目','日付','価格（税込）','入力額','入力時の区分','税率','容量','単位','個数','お店');S.it.forEach(x=>{if(x.h.length)x.h.forEach(r=>w(U(x.g),U(x.n),r.d,r.p,r.in||r.p,r.tx=='ex'?'税抜':'税込',r.r||10,r.cap||'',U(r.u||''),r.n||'',U(r.shop||'')));else w(U(x.g),U(x.n),'','','','','','','','','')});
 w('#資産');w('月','1人目の合計','2人目の合計');S.as.forEach(x=>w(x.y+'年'+x.m,x.a,x.b));
 w('#口座名');w('持ち主','番号','口座名');['a','b'].forEach(k=>S.acc[k].forEach((n,i)=>w(pn(k),i+1,U(n))));
 w('#口座残高');w('月','持ち主','番号','残高');S.as.forEach(x=>{if(x.da)['a','b'].forEach(k=>x['d'+k].forEach((v,i)=>{if(v)w(x.y+'年'+x.m,pn(k),i+1,v)}))});
-w('#固定費');w('名前','引落日','金額','負担','状態','払う人');S.fx.forEach(f=>w(U(nm(f.n)),f.d,f.v,pn(f.p),f.off?'停止':'有効',pn(f.q)));
+w('#固定費');w('名前','引落日','金額','負担','状態','払う人','識別子','適用開始日');S.fx.forEach(f=>w(U(f.n),f.d,f.v,pn(f.p),f.off?'停止':'有効',pn(f.q),f.id||'',f.from||''));
+w('#固定費処理');w('記録キー','処理済み','確認待ち');[...new Set([...(S.pk||[]),...(S.autoPending||[])])].forEach(k=>w(k,(S.pk||[]).includes(k)?'はい':'',(S.autoPending||[]).includes(k)?'はい':''));
 return L.join('\r\n')}
 function csvP(t){const R=[];let r=[],c='',q=0;t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h=='"'){if(t[i+1]=='"'){c+='"';i++}else q=0}else c+=h}else if(h=='"')q=1;else if(h==',')r.push(c),c='';else if(h=='\n'||h=='\r'){if(h=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';R.push(r);r=[]}else c+=h}
 if(c||r.length){r.push(c);R.push(r)}return R}
-function csvI(t){const o={};let k=null,h=0;csvP(t).forEach(r=>{if(r.length==1&&!r[0].trim())return;if(['#設定','#負担割合','#記録','#相場','#資産','#口座名','#口座残高','#固定費'].includes(r[0].trim())){k=r[0].trim().slice(1);o[k]=[];h=1;return}if(!k)return;if(h){h=0;return}o[k].push(r)});
+function csvI(t){const o={};let k=null,h=0;csvP(t).forEach(r=>{if(r.length==1&&!r[0].trim())return;if(['#設定','#負担割合','#記録','#相場','#資産','#口座名','#口座残高','#固定費','#固定費処理'].includes(r[0].trim())){k=r[0].trim().slice(1);o[k]=[];h=1;return}if(!k)return;if(h){h=0;return}o[k].push(r)});
 const n=v=>Math.max(0,+String(v).replace(/[,，¥円\s]/g,'')||0),pf=v=>v=='半々'||v=='h'?'h':v=='2人目'||v=='b'?'b':'a',dt=v=>{v=String(v).trim();const y=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);if(y)return y[1]+'/'+p2(y[2])+'/'+p2(y[3]);const m=v.match(/(\d{1,2})\D+(\d{1,2})\D*$/);return m?fy(m[1])+'/'+p2(m[1])+'/'+p2(m[2]):''},P={};
 if(o['設定']&&o['設定'][0]){const s=o['設定'][0];if(s[0]&&s[1]&&s[0]!=s[1])P.N={a:E(s[0]),b:E(s[1])};P.day=Math.min(31,Math.max(1,n(s[2])||25));P.goal=n(s[3])||2000000;if(s.length>=6)P.colors=normalizePersonColors({a:s[4],b:s[5]})}
 if(o['負担割合'])P.share=o['負担割合'].map(r=>({from:dt(r[0]),a:Number(r[1])})).filter(x=>x.from&&Number.isInteger(x.a)&&x.a>=0&&x.a<=100).sort((x,y)=>x.from.localeCompare(y.from));
-if(o['記録'])P.led=o['記録'].filter(r=>r.length>=5).map(r=>{const e={d:dt(r[0]),s:E(r[1]),a:n(r[2]),b:n(r[3]),h:n(r[4]),p:pf(r[5])=='b'?'b':'a'},rate=String(r[6]||'').trim();if(rate&&Number.isInteger(Number(rate))&&Number(rate)>=0&&Number(rate)<=100)e.r=Number(rate);return e});
+if(o['記録'])P.led=o['記録'].filter(r=>r.length>=5).map(r=>{const e={d:dt(r[0]),s:E(r[1]),a:n(r[2]),b:n(r[3]),h:n(r[4]),p:pf(r[5])=='b'?'b':'a'},rate=String(r[6]||'').trim();if(rate&&Number.isInteger(Number(rate))&&Number(rate)>=0&&Number(rate)<=100)e.r=Number(rate);if(r[7]=='はい')e.fx=1;if(r[8])e.fxkey=String(r[8]);return e});
 if(o['相場']){const m=new Map();o['相場'].forEach(r=>{if(!r[1])return;const key=r[0]+'\u0001'+r[1];if(!m.has(key))m.set(key,{n:E(r[1]),g:E(r[0]||'未分類'),tm:'in',tr:/食品/.test(r[0])?8:10,u:'',h:[]});if(n(r[3])){const it=m.get(key),o={p:n(r[3]),d:dt(r[2]),in:n(r[4])||n(r[3]),tx:r[5]=='税抜'?'ex':'in',r:n(r[6])||10};if(n(r[7])){o.cap=n(r[7]);o.u=E(String(r[8]||'').trim());it.u=it.u||o.u;if(n(r[9]))o.n=n(r[9])}if(String(r[10]||'').trim())o.shop=E(String(r[10]).trim());it.h.push(o)}});P.it=[...m.values()]}
 if(o['資産']){const pm=v=>{v=String(v).trim();const t=v.match(/^(\d{4})\D+(\d{1,2})/);if(t)return{y:+t[1],m:(+t[2])+'月',k:v};const u=v.match(/(\d{1,2})/);return{m:u?(+u[1])+'月':E(v),k:v}};P.as=o['資産'].filter(r=>r[0]).map(r=>({...pm(r[0]),a:n(r[1]),b:n(r[2])}))}
 if(o['口座名']){P.acc={a:S.acc.a.slice(),b:S.acc.b.slice()};o['口座名'].forEach(r=>{const k=pf(r[0])=='b'?'b':'a',i=n(r[1])-1;if(i>=0&&i<10&&r[2])P.acc[k][i]=E(r[2])})}
 if(o['口座残高']&&P.as)o['口座残高'].forEach(r=>{const x=P.as.find(y=>y.k==String(r[0]).trim()),k=pf(r[1])=='b'?'b':'a',i=n(r[2])-1;if(!x||i<0||i>9)return;x.da=x.da||Array(10).fill(0);x.db=x.db||Array(10).fill(0);x['d'+k][i]=n(r[3])});
 if(P.as)P.as.forEach(x=>delete x.k);
-if(o['固定費'])P.fx=o['固定費'].filter(r=>r[0]).map(r=>({n:E(r[0]),d:Math.min(31,Math.max(1,n(r[1])||1)),v:n(r[2]),p:pf(r[3]),off:r[4]=='停止',q:r[5]?(pf(r[5])=='b'?'b':'a'):(pf(r[3])=='b'?'b':'a')}));
+if(o['固定費'])P.fx=o['固定費'].filter(r=>r[0]).map(r=>{const f={n:E(r[0]),d:Math.min(31,Math.max(1,n(r[1])||1)),v:n(r[2]),p:pf(r[3]),off:r[4]=='停止',q:r[5]?(pf(r[5])=='b'?'b':'a'):(pf(r[3])=='b'?'b':'a')};if(r[6])f.id=String(r[6]);if(r[7]&&dt(r[7]))f.from=dt(r[7]);return f});
+if(o['固定費処理']){P.pk=o['固定費処理'].filter(r=>r[0]&&r[1]=='はい').map(r=>r[0]);P.autoPending=o['固定費処理'].filter(r=>r[0]&&r[2]=='はい').map(r=>r[0])}
 return Object.keys(P).length?P:null}
 async function cfile(el){const f=el.files[0];if(!f)return;const b=await f.arrayBuffer();let t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(e){t=new TextDecoder('shift_jis').decode(b)}
 PD=csvI(t);el.value='';if(!PD){$('imp').innerHTML='<b class="B">このCSVは読み込めません。</b>「CSVを書き出す」で作ったファイルの形式（#記録 などの見出し行つき）にしてください。';return}
 const c=[['led','記録','件'],['it','相場','品目'],['as','資産','か月分'],['fx','固定費','件']].filter(x=>PD[x[0]]).map(x=>x[1]+' '+PD[x[0]].length+x[2]);if(PD.N||PD.day||PD.share)c.unshift('設定');
 $('imp').innerHTML='<div style="margin-bottom:6px">読み込む内容：<b>'+c.join('／')+'</b><br>CSVにある項目は、いまのデータと置き換わります。</div><button onclick="capp()">置き換えて読み込む</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="PD=null;$(\'imp\').innerHTML=\'\'">やめる</button>'}
-function capp(){if(!PD)return;const P=PD;PD=null;if(P.N)N=P.N;if(P.day){S.day=P.day;S.goal=P.goal}['led','it','as','fx','acc','share','colors'].forEach(k=>{if(P[k])S[k]=P[k]});S.led.sort(byd);nfx();S.gf='';S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('CSVを読み込みました')}
+function capp(){if(!PD)return;const P=PD;PD=null;if(P.N)N=P.N;if(P.day){S.day=P.day;S.goal=P.goal}['led','it','as','fx','acc','share','colors','pk','autoPending'].forEach(k=>{if(P[k])S[k]=P[k]});S.led.sort(byd);nfx();S.gf='';S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('CSVを読み込みました')}
 let RZ=[];
 function rq(){const k=[['r1','記録',S.led.length+'件'],['r2','相場の価格履歴',S.it.reduce((n,x)=>n+x.h.length,0)+'件'],['r3','資産の履歴',S.as.length+'か月分'],['r4','固定費',S.fx.length+'件']].filter(x=>$(x[0]).checked);
 if(!k.length){T('消す項目を選んでください');return}
