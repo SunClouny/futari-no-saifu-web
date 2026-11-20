@@ -50,6 +50,7 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 14p
 .market label{display:block;margin-top:8px}.market input,.market select{margin-top:3px;min-width:0}.market-price-fields,.market-size-fields{display:grid;gap:6px;grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(0,1fr))}.market-size-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
 .market ul{list-style:none;margin:0;padding:0}.market li{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}.market-delete{background:var(--card);border:1px solid var(--line);color:var(--ink)}.market-extra{margin-top:6px}.market :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .split-choice{display:flex;align-items:center;gap:10px;min-height:44px;margin:10px 0;color:var(--ink);font-size:15px;font-weight:700;cursor:pointer}.split-choice input{width:20px;height:20px;margin:0}.split-preview{padding:10px 12px;border-radius:10px;background:var(--bg);overflow-wrap:anywhere}.split-preview .bar{margin:8px 0}.split-preview .r{flex-wrap:wrap}
+.market-compare{scroll-margin-top:12px}.market-compare summary{font-size:16px}.market-quote{display:grid;gap:4px;background:var(--nav-active);padding:12px;border-radius:10px;margin-top:12px;overflow-wrap:anywhere}.market-compare-button{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-top:10px}
 </style><script>let DESIGN='classic';try{DESIGN=localStorage.getItem('futari-design')==='pink'?'pink':'classic'}catch(e){}function applyDesign(value){DESIGN=value==='pink'?'pink':'classic';document.documentElement.dataset.design=DESIGN;document.querySelector('meta[name="theme-color"]').content=DESIGN==='pink'?'#a5416c':'#1b2540'}applyDesign(DESIGN)</script></head><body>
 <div class="w"><h1><span class="brand-title"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></span><button type="button" id="settingLink" class="setting-link" aria-label="設定を開く" aria-current="false" onclick="go(5)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1-1.6 2.8-.2-.1a1.7 1.7 0 0 0-1.9-.1 1.7 1.7 0 0 0-.9 1.6v.2h-3.2v-.2a1.7 1.7 0 0 0-1.2-1.5 1.7 1.7 0 0 0-1.9.3l-.2.1-2.8-1.6.1-.2a1.7 1.7 0 0 0-.1-1.9 1.7 1.7 0 0 0-1.6-.9H4v-3.2h.2a1.7 1.7 0 0 0 1.5-1.2 1.7 1.7 0 0 0-.3-1.9l-.1-.2 1.6-2.8.2.1a1.7 1.7 0 0 0 1.9-.1 1.7 1.7 0 0 0 .9-1.6V3h3.2v.2a1.7 1.7 0 0 0 1.2 1.5 1.7 1.7 0 0 0 1.9-.3l.2-.1 2.8 1.6-.1.2a1.7 1.7 0 0 0 .1 1.9 1.7 1.7 0 0 0 1.6.9h.2v3.2h-.2a1.7 1.7 0 0 0-1.5 1.4Z"></path></svg><span>設定</span></button></h1><div class="sync-status" id="syncbar" aria-live="polite" data-state="" style="display:none"></div><div id="v"></div></div><div class="toast" id="tt"></div>
 <div class="lg" id="lg"><div><h1 class="auth-brand"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></h1><div id="authView"></div><div class="c" id="hc" style="display:none"><h3>家計を始める</h3><p class="s" style="margin:0 0 8px">はじめての方は「新しい家計を作る」を押してください。パートナーがすでに作っている場合は、教えてもらった招待コードを入力します。</p><button onclick="hnew()">新しい家計を作る</button><label style="display:block;margin-top:14px">招待コード（パートナーから聞いたもの）</label><input id="hcode" autocapitalize="characters" autocomplete="off"><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="hjoin()">招待コードで参加する</button><div style="text-align:center;margin-top:10px"><a class="s" onclick="lo()">ログアウト</a></div></div><div id="lgM" class="s" style="margin-top:10px;text-align:center">読み込み中…</div></div></div>
@@ -241,6 +242,82 @@ function marketHistory(item) {
     .sort((a,b) => String(b.record.d||'').localeCompare(String(a.record.d||'')) || b.index-a.index);
 }
 
+function marketUnitPrice(price, size, unit, packs = 1) {
+  const normalized = String(unit || '').normalize('NFKC').trim().toLowerCase();
+  if (!normalized || ![price,size,packs].every(n => Number.isFinite(n) && n > 0)) return null;
+  let basis = '1' + normalized, multiplier = 1, scale = 1;
+  let dimension = 'count:' + normalized;
+  if (['kg','g'].includes(normalized)) {
+    basis = '100g'; dimension = 'mass'; scale = 100;
+    multiplier = normalized === 'kg' ? 1000 : 1;
+  } else if (['l','ml'].includes(normalized)) {
+    basis = '100mL'; dimension = 'volume'; scale = 100;
+    multiplier = normalized === 'l' ? 1000 : 1;
+  }
+  const quantity = size * multiplier * packs;
+  const amount = price / quantity * scale;
+  return Number.isFinite(amount) && amount > 0 ? {basis, dimension, amount} : null;
+}
+
+function compareMarketPrice(current, history) {
+  const prices = [];
+  for (const row of history) {
+    const past = marketUnitPrice(Number(row.p), Number(row.cap), U(row.u || ''), Number(row.n ?? 1));
+    if (past && past.dimension === current.dimension) prices.push(past.amount);
+  }
+  if (!prices.length) return null;
+  prices.sort((a,b) => a-b);
+  const mid = Math.floor(prices.length / 2);
+  const median = prices.length % 2 ? prices[mid] : prices[mid-1]/2 + prices[mid]/2;
+  return {median,count:prices.length};
+}
+
+function marketCompareForm() {
+  return `<details class="c market-compare" id="market-compare"><summary>買う前に単価を比較</summary>
+    <label>比較する品目<select id="compare-item" onchange="selectCompareItem()"><option value="">単価だけ計算</option>${S.it.map((item,i)=>`<option value="${i}">${item.n}（${item.g}）</option>`).join('')}</select></label>
+    <label>商品の税込価格（円）<input type="number" id="compare-price" inputmode="numeric" min="1" placeholder="例：298" oninput="showMarketComparison()"></label>
+    <div class="market-size-fields">
+    <label>1個の容量<input type="number" id="compare-size" inputmode="decimal" min="0" step="any" placeholder="例：500" oninput="showMarketComparison()"></label>
+    <label>単位<input id="compare-unit" list="ul" value="g" oninput="showMarketComparison()"></label>
+    <label>個数<input type="number" id="compare-packs" inputmode="numeric" min="1" step="1" value="1" oninput="showMarketComparison()"></label></div>
+    <div class="market-quote" aria-live="polite"><strong id="compare-result">価格と容量を入力してください</strong><small id="compare-reference"></small></div></details>`;
+}
+
+function selectCompareItem() {
+  const item = S.it[$('compare-item').value];
+  if (item && !$('compare-size').value) $('compare-unit').value = U(item.u || marketHistory(item).find(h=>h.record.u)?.record.u || '個');
+  showMarketComparison();
+}
+
+function openMarketComparison(index) {
+  $('market-compare').open = true;
+  $('compare-item').value = String(index);
+  selectCompareItem();
+  $('market-compare').scrollIntoView({block:'start'});
+  $('compare-price').focus({preventScroll:true});
+}
+
+function showMarketComparison() {
+  const price = Number($('compare-price').value), packs = Number($('compare-packs').value);
+  const current = marketUnitPrice(price, Number($('compare-size').value), $('compare-unit').value, packs);
+  const result = $('compare-result'), reference = $('compare-reference');
+  reference.textContent = '';
+  if (!current || !Number.isSafeInteger(price) || !Number.isSafeInteger(packs)) {
+    result.textContent = '税込価格・容量・単位・個数を入力してください';
+    return;
+  }
+  const fmt = value => value.toLocaleString('ja-JP',{maximumFractionDigits:2});
+  result.textContent = fmt(current.amount) + '円／' + current.basis;
+  const item = S.it[$('compare-item').value];
+  if (!item) {reference.textContent = '品目を選ぶと過去の記録と比較できます。';return}
+  const benchmark = compareMarketPrice(current,item.h);
+  if (!benchmark) {reference.textContent = '同じ単位に換算できる価格履歴がまだありません。';return}
+  const difference = Number(fmt(current.amount).replace(/,/g,'')) - Number(fmt(benchmark.median).replace(/,/g,''));
+  result.textContent += difference === 0 ? '（相場と同じ）' :
+    '（相場より' + fmt(Math.abs(difference)) + '円' + (difference < 0 ? '安い' : '高い') + '）';
+  reference.textContent = 'この品目の相場：' + fmt(benchmark.median) + '円／' + current.basis + '（過去' + benchmark.count + '件の単価の中央値）';
+}
+
 function marketCard(item, i) {
   const history = marketHistory(item);
   const latest = history[0]?.record;
@@ -262,7 +339,7 @@ function marketCard(item, i) {
     <button class="market-delete" onclick="mdl(${i})">${S.ic===i?'もう一度押して削除':'この品目を削除'}</button></article>`;
   return `<article class="c market-card"><header class="r"><h3>${item.n}</h3><button type="button" class="market-link" onclick="S.ie=${i};S.ic=-1;R(1)">編集</button></header>
     ${latest?`<div class="market-price"><span>直近の税込価格</span><b>${Y(latest.p)}</b>${comparison?`<small>${comparison}</small>`:''}</div><small>${metadata(latest)}</small>`:'<small>価格はまだ記録されていません</small>'}
-    <div class="market-actions"><details><summary>価格を記録</summary>${marketFields(i,item)}
+    <button type="button" class="market-compare-button" onclick="openMarketComparison(${i})">この品目と単価を比較</button><div class="market-actions"><details><summary>価格を記録</summary>${marketFields(i,item)}
     <p id="tv${i}" class="s" aria-live="polite">税抜価格は税込に換算します</p><button onclick="rec(${i})">この価格を保存</button></details>
     ${history.length?`<details><summary>価格履歴（${history.length}件）</summary><ul>${historyRows}</ul></details>`:''}</div></article>`;
 }
@@ -295,7 +372,7 @@ function mkt() {
     ${indices.map(i=>`<div data-item="${i}">${marketCard(S.it[i],i)}</div>`).join('')}</section>`).join('');
   return `<div class="market"><div class="market-heading"><h2>品目の相場</h2><details id="market-add"><summary>＋ 品目を追加</summary><div class="c market-add-body"><label>品目名<input id="in" placeholder="例：牛乳"></label>
     <label>ジャンル<input id="ig" list="gl" value="${S.gf}" placeholder="例：食品"></label>${marketFields(null)}<button onclick="ai()">品目を保存</button></div></details></div>
-    <input id="market-search" type="search" aria-label="品目名で検索" placeholder="品目名で検索" value="${E(query)}" oninput="filterMarket()">
+    ${marketCompareForm()}<input id="market-search" type="search" aria-label="品目名で検索" placeholder="品目名で検索" value="${E(query)}" oninput="filterMarket()">
     <div class="market-filters" role="group" aria-label="ジャンル">${chip(-1,'すべて',!S.gf)}${genres.map((g,i)=>chip(i,g,S.gf===g)).join('')}</div>
     <div id="market-count" class="s" role="status"></div>${cards}
     <p id="market-empty" class="c">${S.it.length?'一致する品目がありません。検索語やジャンルを変更してください。':'最初の品目を追加して、価格を記録しましょう。'}</p>
