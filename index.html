@@ -281,7 +281,9 @@ function marketCompareForm() {
     <label>1個の容量<input type="number" id="compare-size" inputmode="decimal" min="0" step="any" placeholder="例：500" oninput="showMarketComparison()"></label>
     <label>単位<input id="compare-unit" list="ul" placeholder="g" data-default="g" oninput="selectCompareItem()"></label>
     <label>個数<input type="number" id="compare-packs" inputmode="numeric" min="1" step="1" placeholder="1" data-default="1" oninput="showMarketComparison()"></label></div>
-    <div class="market-quote" aria-live="polite"><strong id="compare-result">価格と容量を入力してください</strong><small id="compare-reference"></small></div></details>`;
+    <div class="market-quote" aria-live="polite"><strong id="compare-result">価格と容量を入力してください</strong><small id="compare-reference"></small></div>
+    <div id="compare-save-fields" hidden><label>お店（任意）<input id="compare-shop" list="sl" placeholder="店名"></label>
+    <button type="button" id="compare-save" disabled onclick="saveMarketComparison()">この価格を履歴に記録</button></div></details>`;
 }
 
 function selectCompareItem() {
@@ -323,19 +325,42 @@ function openMarketComparison(index) {
   $('compare-price').focus({preventScroll:true});
 }
 
-function showMarketComparison() {
-  const price = Number($('compare-price').value), packInput = $('compare-packs'), unitInput = $('compare-unit');
+function readMarketComparison() {
+  const price = Number($('compare-price').value), size = Number($('compare-size').value);
+  const packInput = $('compare-packs'), unitInput = $('compare-unit');
   const packs = packInput.validity?.badInput ? NaN : Number(packInput.value || packInput.dataset.default);
-  const current = marketUnitPrice(price, Number($('compare-size').value), unitInput.value.trim() || unitInput.dataset.default, packs);
+  const unit = unitInput.value.trim() || unitInput.dataset.default;
+  const current = marketUnitPrice(price, size, unit, packs);
+  if (!current || !Number.isSafeInteger(price) || !Number.isSafeInteger(packs)) return null;
+  return {price,size,unit,packs,current};
+}
+
+function saveMarketComparison() {
+  const item = S.it[$('compare-item').value], quote = readMarketComparison();
+  if (!item || !quote) return;
+  const record = {p:quote.price, in:quote.price, tx:'in', r:item.tr || 10, d:D(),
+    cap:quote.size, u:E(quote.unit), n:quote.packs};
+  const shop = $('compare-shop').value.trim();
+  if (shop) record.shop = E(shop);
+  item.h.push(record);
+  $('compare-price').value = '';
+  R(1);
+  T('税込'+Y(record.p)+'を価格履歴に記録しました');
+}
+
+function showMarketComparison() {
+  const quote = readMarketComparison(), item = S.it[$('compare-item').value];
+  $('compare-save-fields').hidden = !item;
+  $('compare-save').disabled = !item || !quote;
   const result = $('compare-result'), reference = $('compare-reference');
   reference.textContent = '';
-  if (!current || !Number.isSafeInteger(price) || !Number.isSafeInteger(packs)) {
+  if (!quote) {
     result.textContent = '税込価格・容量・単位・個数を入力してください';
     return;
   }
+  const {current} = quote;
   const fmt = value => value.toLocaleString('ja-JP',{maximumFractionDigits:2});
   result.textContent = fmt(current.amount) + '円／' + current.basis;
-  const item = S.it[$('compare-item').value];
   if (!item) {reference.textContent = '品目を選ぶと過去の記録と比較できます。';return}
   const benchmark = compareMarketPrice(current,item.h);
   if (!benchmark) {reference.textContent = '同じ単位に換算できる価格履歴がまだありません。';return}
