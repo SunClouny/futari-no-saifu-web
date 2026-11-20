@@ -227,7 +227,7 @@ function marketHistory(item) {
 
 function marketUnitPrice(price, size, unit, packs = 1) {
   const normalized = String(unit || '').normalize('NFKC').trim().toLowerCase();
-  if (!normalized || ![price,size,packs].every(n => Number.isFinite(n) && n > 0)) return null;
+  if (!normalized || !Number.isFinite(price) || price < 0 || ![size,packs].every(n => Number.isFinite(n) && n > 0)) return null;
   let basis = '1' + normalized, multiplier = 1, scale = 1;
   let dimension = 'count:' + normalized;
   if (['kg','g'].includes(normalized)) {
@@ -239,7 +239,7 @@ function marketUnitPrice(price, size, unit, packs = 1) {
   }
   const quantity = size * multiplier * packs;
   const amount = price / quantity * scale;
-  return Number.isFinite(amount) && amount > 0 ? {basis, dimension, amount} : null;
+  return Number.isFinite(quantity) && Number.isFinite(amount) && amount >= 0 ? {basis, dimension, amount} : null;
 }
 
 function compareMarketPrice(current, history) {
@@ -259,9 +259,10 @@ function marketCompareForm() {
   return `<details class="c market-compare" id="market-compare"><summary>価格を比較・記録</summary>
     <label>比較する品目<select id="compare-item" onchange="selectCompareItem(true)"><option value="">単価だけ計算</option>${S.it.map((item,i)=>`<option value="${i}">${item.n}（${item.g}）</option>`).join('')}</select></label>
     <small id="compare-hint" aria-live="polite"></small>
-    <div class="market-price-fields"><label>価格（円）<input type="number" id="compare-price" inputmode="numeric" min="1" placeholder="例：298" oninput="showMarketComparison()"></label>
+    <div class="market-price-fields"><label>値札の価格（円）<input type="number" id="compare-price" inputmode="numeric" min="1" placeholder="例：298" oninput="showMarketComparison()"></label>
     <label>価格区分<select id="compare-tax" onchange="selectCompareItem()"><option value="in">税込</option><option value="ex">税抜</option></select></label>
     <label>税率<select id="compare-rate" onchange="selectCompareItem()"><option value="10">10%</option><option value="8">8%</option></select></label></div>
+    <label>割引率（％OFF・任意）<input id="compare-discount" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="0" oninput="showMarketComparison()"></label>
     <div class="market-size-fields">
     <label>1個の容量<input type="number" id="compare-size" inputmode="decimal" min="0" step="any" placeholder="例：500" oninput="showMarketComparison()"></label>
     <label>単位<input id="compare-unit" list="ul" placeholder="g" data-default="g" oninput="selectCompareItem()"></label>
@@ -275,6 +276,7 @@ function selectCompareItem(itemChanged = false) {
   const item = S.it[$('compare-item').value];
   if (itemChanged && !$('compare-price').value) {
     $('compare-tax').value = item?.tm === 'ex' ? 'ex' : 'in';
+    $('compare-discount').value = '';
     $('compare-rate').value = String(item?.tr || 10);
   }
   const unitInput = $('compare-unit'), packInput = $('compare-packs');
@@ -285,7 +287,7 @@ function selectCompareItem(itemChanged = false) {
   let best = null, cheapestPriceOnly = null, lowest = Infinity;
   for (const row of history) {
     const price = Number(row.p);
-    if (!(price > 0 && Number.isFinite(price))) continue;
+    if (!(price >= 0 && Number.isFinite(price))) continue;
     const past = marketUnitPrice(price, Number(row.cap), U(row.u || ''), Number(row.n ?? 1));
     if (!past && !row.cap && (!cheapestPriceOnly || price < Number(cheapestPriceOnly.p))) cheapestPriceOnly = row;
     if (past && past.dimension === dimension && past.amount < lowest) {
@@ -295,8 +297,8 @@ function selectCompareItem(itemChanged = false) {
   }
   const priceHint = best || cheapestPriceOnly;
   const excludingTax = $('compare-tax').value === 'ex';
-  const hintValue = excludingTax ? (priceHint?.tx === 'ex' && priceHint.r == $('compare-rate').value ? priceHint.in : null) : priceHint?.p;
-  $('compare-price').placeholder = hintValue ? String(hintValue) : '例：298';
+  const hintValue = excludingTax ? (priceHint?.tx === 'ex' && priceHint.r == $('compare-rate').value ? (priceHint.discount ? discountedYen(priceHint.in,priceHint.discount) : priceHint.in) : null) : priceHint?.p;
+  $('compare-price').placeholder = hintValue != null ? String(hintValue) : '例：298';
   $('compare-size').placeholder = best ? String(best.cap) : '例：500';
   unitInput.placeholder = best ? U(best.u) : defaultUnit;
   packInput.placeholder = String(best?.n ?? 1);
@@ -316,12 +318,25 @@ function openMarketComparison(index) {
   $('compare-price').focus({preventScroll:true});
 }
 
+function marketDiscount(input){
+  if(input.validity?.badInput)return null;
+  const rate=Number(input.value);
+  return Number.isFinite(rate) && rate>=0 && rate<=100 && Number(rate.toFixed(2))===rate ? rate : null;
+}
+function discountedYen(amount, percent){
+  const remaining=10000-Math.round(percent*100);
+  return Number(BigInt(amount)*BigInt(remaining)/10000n);
+}
 function readMarketComparison() {
   const entered = Number($('compare-price').value), sizeInput = $('compare-size');
   const mode = $('compare-tax').value === 'ex' ? 'ex' : 'in';
   const rate = Number($('compare-rate').value) === 8 ? 8 : 10;
-  const price = tx(entered,mode,rate), size = Number(sizeInput.value);
-  if (!Number.isSafeInteger(entered) || !Number.isSafeInteger(price) || price <= 0) return null;
+  const discount = marketDiscount($('compare-discount'));
+  if (discount === null || !Number.isSafeInteger(entered) || entered <= 0) return null;
+  const reduced = discountedYen(entered,discount);
+  const price = mode === 'ex' ? Number(BigInt(reduced)*BigInt(100+rate)/100n) : reduced;
+  if (!Number.isSafeInteger(price)) return null;
+  const size = Number(sizeInput.value);
   const packInput = $('compare-packs'), unitInput = $('compare-unit');
   const packs = packInput.validity?.badInput ? NaN : Number(packInput.value || packInput.dataset.default);
   const unit = unitInput.value.trim() || unitInput.dataset.default;
@@ -329,13 +344,14 @@ function readMarketComparison() {
   const priceOnly = sizeInput.value === '' && !sizeInput.validity?.badInput &&
     !unitInput.value.trim() && !packInput.value && !packInput.validity?.badInput;
   if (!priceOnly && (!current || !Number.isSafeInteger(packs))) return null;
-  return {price,entered,mode,rate,size,unit,packs,current};
+  return {price,entered,discount,mode,rate,size,unit,packs,current};
 }
 
 function saveMarketComparison() {
   const item = S.it[$('compare-item').value], quote = readMarketComparison();
   if (!item || !quote) return;
   const record = {p:quote.price, in:quote.entered, tx:quote.mode, r:quote.rate, d:D()};
+  if (quote.discount) record.discount = quote.discount;
   if (quote.current) {
     Object.assign(record,{cap:quote.size, u:E(quote.unit), n:quote.packs});
     item.u = record.u;
@@ -357,17 +373,18 @@ function showMarketComparison() {
   const result = $('compare-result'), reference = $('compare-reference');
   reference.textContent = '';
   if (!quote) {
-    result.textContent = '価格を入力してください。単価を比べるには容量・単位・個数も指定してください。';
+    result.textContent = marketDiscount($('compare-discount')) === null ? '割引率は0〜100％で、小数第2位まで入力してください。' : '価格を入力してください。単価を比べるには容量・単位・個数も指定してください。';
     return;
   }
+  const priceLabel = (quote.discount ? quote.discount+'％OFF後・税込 ' : '税込 ')+Y(quote.price);
   if (!quote.current) {
-    result.textContent = '税込 '+Y(quote.price);
+    result.textContent = priceLabel;
     reference.textContent = item ? '価格だけで記録できます。容量を入力すると単価を比較できます。' : '容量を入力すると単価を計算できます。';
     return;
   }
   const {current} = quote;
   const fmt = value => value.toLocaleString('ja-JP',{maximumFractionDigits:2});
-  result.textContent = (quote.mode === 'ex' ? '税込 '+Y(quote.price)+'・' : '') + fmt(current.amount) + '円／' + current.basis;
+  result.textContent = (quote.discount || quote.mode === 'ex' ? priceLabel+'・' : '') + fmt(current.amount) + '円／' + current.basis;
   if (!item) {reference.textContent = '品目を選ぶと過去の記録と比較できます。';return}
   const benchmark = compareMarketPrice(current,item.h);
   if (!benchmark) {reference.textContent = '同じ単位に換算できる価格履歴がまだありません。';return}
@@ -388,7 +405,7 @@ function marketCard(item, i) {
   }
   const metadata = r => [fdt(r.d,1), r.shop, capt(r)].filter(Boolean).join(' · ');
   const historyRows = history.map(({record:r,index}) => `<li><div><strong>${Y(r.p)}</strong>
-    ${r.tx==='ex'?`<small>税抜 ${Y(r.in)}（${r.r}%）</small>`:''}
+    ${r.discount?`<small>${r.tx==='ex'?'税抜':'税込'} ${Y(r.in)}から${Number(r.discount)}％OFF</small>`:r.tx==='ex'?`<small>税抜 ${Y(r.in)}（${r.r}%）</small>`:''}
     <small>${metadata(r)}</small></div>${S.ie===i?`<button class="market-link" type="button" onclick="rdl(${i},${index})" aria-label="${fdt(r.d,1)}の価格記録を取り消す">取消</button>`:''}</li>`).join('');
   if (S.ie===i) return `<article class="c market-card"><h3>品目を編集</h3>
     <label>品目名<input id="mn" value="${item.n}"></label><label>ジャンル<input id="mg" list="gl" value="${item.g}"></label>
@@ -508,7 +525,7 @@ function csvO(){const L=[],w=(...a)=>L.push(a.map(Q).join(','));
 w('#設定');w('1人目の名前','2人目の名前','残高入力日','貯金目標','1人目の色','2人目の色');w(U(N.a),U(N.b),S.day,S.goal,S.colors.a||'',S.colors.b||'');
 w('#負担割合');w('適用開始日','1人目の割合（％）');S.share.forEach(x=>w(x.from,x.a));
 w('#記録');w('日付','店名','1人目だけの金額','2人目だけの金額','ふたりで負担する金額','払った人','適用した1人目の割合（％）','固定費の自動記録','固定費の記録キー');S.led.forEach(e=>w(e.d,U(e.s),e.a,e.b,e.h,pn(e.p),e.r===undefined?'':entryRate(e),e.fx?'はい':'',e.fxkey||''));
-w('#相場');w('ジャンル','品目','日付','価格（税込）','入力額','入力時の区分','税率','容量','単位','個数','お店');S.it.forEach(x=>{if(x.h.length)x.h.forEach(r=>w(U(x.g),U(x.n),r.d,r.p,r.in||r.p,r.tx=='ex'?'税抜':'税込',r.r||10,r.cap||'',U(r.u||''),r.n||'',U(r.shop||'')));else w(U(x.g),U(x.n),'','','','','','','','','')});
+w('#相場');w('ジャンル','品目','日付','価格（税込）','入力額','入力時の区分','税率','容量','単位','個数','お店','割引率（％）');S.it.forEach(x=>{if(x.h.length)x.h.forEach(r=>w(U(x.g),U(x.n),r.d,r.p,r.in||r.p,r.tx=='ex'?'税抜':'税込',r.r||10,r.cap||'',U(r.u||''),r.n||'',U(r.shop||''),r.discount||''));else w(U(x.g),U(x.n),'','','','','','','','','','')});
 w('#資産');w('月','1人目の合計','2人目の合計');S.as.forEach(x=>w(x.y+'年'+x.m,x.a,x.b));
 w('#口座名');w('持ち主','番号','口座名');['a','b'].forEach(k=>S.acc[k].forEach((n,i)=>w(pn(k),i+1,U(n))));
 w('#口座残高');w('月','持ち主','番号','残高');S.as.forEach(x=>{if(x.da)['a','b'].forEach(k=>x['d'+k].forEach((v,i)=>{if(v)w(x.y+'年'+x.m,pn(k),i+1,v)}))});
@@ -522,7 +539,7 @@ const n=v=>Math.max(0,+String(v).replace(/[,，¥円\s]/g,'')||0),pf=v=>v=='半�
 if(o['設定']&&o['設定'][0]){const s=o['設定'][0];if(s[0]&&s[1]&&s[0]!=s[1])P.N={a:E(s[0]),b:E(s[1])};P.day=Math.min(31,Math.max(1,n(s[2])||25));P.goal=n(s[3])||2000000;if(s.length>=6)P.colors=normalizePersonColors({a:s[4],b:s[5]})}
 if(o['負担割合'])P.share=o['負担割合'].map(r=>({from:dt(r[0]),a:Number(r[1])})).filter(x=>x.from&&Number.isInteger(x.a)&&x.a>=0&&x.a<=100).sort((x,y)=>x.from.localeCompare(y.from));
 if(o['記録'])P.led=o['記録'].filter(r=>r.length>=5).map(r=>{const e={d:dt(r[0]),s:E(r[1]),a:n(r[2]),b:n(r[3]),h:n(r[4]),p:pf(r[5])=='b'?'b':'a'},rate=String(r[6]||'').trim();if(rate&&Number.isInteger(Number(rate))&&Number(rate)>=0&&Number(rate)<=100)e.r=Number(rate);if(r[7]=='はい')e.fx=1;if(r[8])e.fxkey=String(r[8]);return e});
-if(o['相場']){const m=new Map();o['相場'].forEach(r=>{if(!r[1])return;const key=r[0]+'\u0001'+r[1];if(!m.has(key))m.set(key,{n:E(r[1]),g:E(r[0]||'未分類'),tm:'in',tr:/食品/.test(r[0])?8:10,u:'',h:[]});if(n(r[3])){const it=m.get(key),o={p:n(r[3]),d:dt(r[2]),in:n(r[4])||n(r[3]),tx:r[5]=='税抜'?'ex':'in',r:n(r[6])||10};if(n(r[7])){o.cap=n(r[7]);o.u=E(String(r[8]||'').trim());it.u=it.u||o.u;if(n(r[9]))o.n=n(r[9])}if(String(r[10]||'').trim())o.shop=E(String(r[10]).trim());it.h.push(o)}});P.it=[...m.values()]}
+if(o['相場']){const m=new Map();o['相場'].forEach(r=>{if(!r[1])return;const key=r[0]+'\u0001'+r[1];if(!m.has(key))m.set(key,{n:E(r[1]),g:E(r[0]||'未分類'),tm:'in',tr:/食品/.test(r[0])?8:10,u:'',h:[]});const discount=Number(r[11]||0);if(n(r[3])||(r[3]==='0'&&discount>0&&discount<=100)){const it=m.get(key),o={p:n(r[3]),d:dt(r[2]),in:n(r[4])||n(r[3]),tx:r[5]=='税抜'?'ex':'in',r:n(r[6])||10};if(discount>0&&discount<=100&&Number.isSafeInteger(o.in)&&o.in>0)o.discount=discount;if(n(r[7])){o.cap=n(r[7]);o.u=E(String(r[8]||'').trim());it.u=it.u||o.u;if(n(r[9]))o.n=n(r[9])}if(String(r[10]||'').trim())o.shop=E(String(r[10]).trim());it.h.push(o)}});P.it=[...m.values()]}
 if(o['資産']){const pm=v=>{v=String(v).trim();const t=v.match(/^(\d{4})\D+(\d{1,2})/);if(t)return{y:+t[1],m:(+t[2])+'月',k:v};const u=v.match(/(\d{1,2})/);return{m:u?(+u[1])+'月':E(v),k:v}};P.as=o['資産'].filter(r=>r[0]).map(r=>({...pm(r[0]),a:n(r[1]),b:n(r[2])}))}
 if(o['口座名']){P.acc={a:S.acc.a.slice(),b:S.acc.b.slice()};o['口座名'].forEach(r=>{const k=pf(r[0])=='b'?'b':'a',i=n(r[1])-1;if(i>=0&&i<10&&r[2])P.acc[k][i]=E(r[2])})}
 if(o['口座残高']&&P.as)o['口座残高'].forEach(r=>{const x=P.as.find(y=>y.k==String(r[0]).trim()),k=pf(r[1])=='b'?'b':'a',i=n(r[2])-1;if(!x||i<0||i>9)return;x.da=x.da||Array(10).fill(0);x.db=x.db||Array(10).fill(0);x['d'+k][i]=n(r[3])});
