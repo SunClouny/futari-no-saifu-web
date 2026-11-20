@@ -275,17 +275,43 @@ function compareMarketPrice(current, history) {
 function marketCompareForm() {
   return `<details class="c market-compare" id="market-compare"><summary>買う前に単価を比較</summary>
     <label>比較する品目<select id="compare-item" onchange="selectCompareItem()"><option value="">単価だけ計算</option>${S.it.map((item,i)=>`<option value="${i}">${item.n}（${item.g}）</option>`).join('')}</select></label>
+    <small id="compare-hint" aria-live="polite"></small>
     <label>商品の税込価格（円）<input type="number" id="compare-price" inputmode="numeric" min="1" placeholder="例：298" oninput="showMarketComparison()"></label>
     <div class="market-size-fields">
     <label>1個の容量<input type="number" id="compare-size" inputmode="decimal" min="0" step="any" placeholder="例：500" oninput="showMarketComparison()"></label>
-    <label>単位<input id="compare-unit" list="ul" value="g" oninput="showMarketComparison()"></label>
-    <label>個数<input type="number" id="compare-packs" inputmode="numeric" min="1" step="1" value="1" oninput="showMarketComparison()"></label></div>
+    <label>単位<input id="compare-unit" list="ul" placeholder="g" data-default="g" oninput="selectCompareItem()"></label>
+    <label>個数<input type="number" id="compare-packs" inputmode="numeric" min="1" step="1" placeholder="1" data-default="1" oninput="showMarketComparison()"></label></div>
     <div class="market-quote" aria-live="polite"><strong id="compare-result">価格と容量を入力してください</strong><small id="compare-reference"></small></div></details>`;
 }
 
 function selectCompareItem() {
   const item = S.it[$('compare-item').value];
-  if (item && !$('compare-size').value) $('compare-unit').value = U(item.u || marketHistory(item).find(h=>h.record.u)?.record.u || '個');
+  const unitInput = $('compare-unit'), packInput = $('compare-packs');
+  const history = item ? marketHistory(item).map(entry => entry.record) : [];
+  const defaultUnit = item ? U(item.u || history.find(row => row.u)?.u || '個') : 'g';
+  const unit = unitInput.value.trim() || defaultUnit;
+  const dimension = marketUnitPrice(1, 1, unit)?.dimension;
+  let best = null, cheapestPriceOnly = null, lowest = Infinity;
+  for (const row of history) {
+    const price = Number(row.p);
+    if (!(price > 0 && Number.isFinite(price))) continue;
+    const past = marketUnitPrice(price, Number(row.cap), U(row.u || ''), Number(row.n ?? 1));
+    if (!past && !row.cap && (!cheapestPriceOnly || price < Number(cheapestPriceOnly.p))) cheapestPriceOnly = row;
+    if (past && past.dimension === dimension && past.amount < lowest) {
+      lowest = past.amount;
+      best = row;
+    }
+  }
+  const priceHint = best || cheapestPriceOnly;
+  $('compare-price').placeholder = priceHint ? String(priceHint.p) : '例：298';
+  $('compare-size').placeholder = best ? String(best.cap) : '例：500';
+  unitInput.placeholder = best ? U(best.u) : defaultUnit;
+  packInput.placeholder = String(best?.n ?? 1);
+  unitInput.dataset.default = unitInput.placeholder;
+  packInput.dataset.default = packInput.placeholder;
+  $('compare-hint').textContent = best
+    ? '薄い値は過去の単価が最安だったときの記録です。単位と個数は、同じなら空欄で計算できます。'
+    : cheapestPriceOnly ? '容量のない履歴は、税込価格の最安値だけを薄く表示します。' : '';
   showMarketComparison();
 }
 
@@ -298,8 +324,9 @@ function openMarketComparison(index) {
 }
 
 function showMarketComparison() {
-  const price = Number($('compare-price').value), packs = Number($('compare-packs').value);
-  const current = marketUnitPrice(price, Number($('compare-size').value), $('compare-unit').value, packs);
+  const price = Number($('compare-price').value), packInput = $('compare-packs'), unitInput = $('compare-unit');
+  const packs = packInput.validity?.badInput ? NaN : Number(packInput.value || packInput.dataset.default);
+  const current = marketUnitPrice(price, Number($('compare-size').value), unitInput.value.trim() || unitInput.dataset.default, packs);
   const result = $('compare-result'), reference = $('compare-reference');
   reference.textContent = '';
   if (!current || !Number.isSafeInteger(price) || !Number.isSafeInteger(packs)) {
