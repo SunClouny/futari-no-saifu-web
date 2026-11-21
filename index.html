@@ -52,6 +52,7 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 14p
 .split-choice{display:flex;align-items:center;gap:10px;min-height:44px;margin:10px 0;color:var(--ink);font-size:15px;font-weight:700;cursor:pointer}.split-choice input{width:20px;height:20px;margin:0}.split-preview{padding:10px 12px;border-radius:10px;background:var(--bg);overflow-wrap:anywhere}.split-preview .bar{margin:8px 0}.split-preview .r{flex-wrap:wrap}
 .market-compare{scroll-margin-top:12px}.market-compare summary{font-size:16px}.market-quote{display:grid;gap:4px;background:var(--nav-active);padding:12px;border-radius:10px;margin-top:12px;overflow-wrap:anywhere}.market-compare-button{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-top:10px}
 .loan-page h2{margin:0 0 12px;font-size:22px}.loan-page strong,.loan-page label{display:block}.loan-page strong{font-size:21px;font-variant-numeric:tabular-nums}.loan-page input,.loan-page select,.loan-page .g>*{min-width:0}.loan-page label{margin-top:6px}.loan-page summary{cursor:pointer;padding:10px 0;font-weight:700}.loan-card small{color:var(--sub)}.loan-card h3{margin:0;overflow-wrap:anywhere}.loan-card .r>b{white-space:nowrap}.loan-card ul{list-style:none;padding:0;margin:0}.loan-card details{margin-top:6px;border-top:1px solid var(--line)}
+.loan-plan{margin:10px 0;padding:10px 12px;background:var(--nav-active);border-radius:10px}.loan-plan small{display:block;margin-top:2px}
 </style><script>let DESIGN='classic';try{DESIGN=localStorage.getItem('futari-design')==='pink'?'pink':'classic'}catch(e){}function applyDesign(value){DESIGN=value==='pink'?'pink':'classic';document.documentElement.dataset.design=DESIGN;document.querySelector('meta[name="theme-color"]').content=DESIGN==='pink'?'#a5416c':'#1b2540'}applyDesign(DESIGN)</script></head><body>
 <div class="w"><h1><span class="brand-title"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></span><button type="button" id="settingLink" class="setting-link" aria-label="設定を開く" aria-current="false" onclick="go(5)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1-1.6 2.8-.2-.1a1.7 1.7 0 0 0-1.9-.1 1.7 1.7 0 0 0-.9 1.6v.2h-3.2v-.2a1.7 1.7 0 0 0-1.2-1.5 1.7 1.7 0 0 0-1.9.3l-.2.1-2.8-1.6.1-.2a1.7 1.7 0 0 0-.1-1.9 1.7 1.7 0 0 0-1.6-.9H4v-3.2h.2a1.7 1.7 0 0 0 1.5-1.2 1.7 1.7 0 0 0-.3-1.9l-.1-.2 1.6-2.8.2.1a1.7 1.7 0 0 0 1.9-.1 1.7 1.7 0 0 0 .9-1.6V3h3.2v.2a1.7 1.7 0 0 0 1.2 1.5 1.7 1.7 0 0 0 1.9-.3l.2-.1 2.8 1.6-.1.2a1.7 1.7 0 0 0 .1 1.9 1.7 1.7 0 0 0 1.6.9h.2v3.2h-.2a1.7 1.7 0 0 0-1.5 1.4Z"></path></svg><span>設定</span></button></h1><div class="sync-status" id="syncbar" aria-live="polite" data-state="" style="display:none"></div><div id="v"></div></div><div class="toast" id="tt"></div>
 <div class="lg" id="lg"><div><h1 class="auth-brand"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></h1><div id="authView"></div><div class="c" id="hc" style="display:none"><h3>家計を始める</h3><p class="s" style="margin:0 0 8px">はじめての方は「新しい家計を作る」を押してください。パートナーがすでに作っている場合は、教えてもらった招待コードを入力します。</p><button onclick="hnew()">新しい家計を作る</button><label style="display:block;margin-top:14px">招待コード（パートナーから聞いたもの）</label><input id="hcode" autocapitalize="characters" autocomplete="off"><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="hjoin()">招待コードで参加する</button><div style="text-align:center;margin-top:10px"><a class="s" onclick="lo()">ログアウト</a></div></div><div id="lgM" class="s" style="margin-top:10px;text-align:center">読み込み中…</div></div></div>
@@ -235,19 +236,81 @@ function loanId() { return globalThis.crypto?.randomUUID?.() || uid()+uid(); }
 function loanRemaining(loan) {
   return loan.payments.reduce((balance,payment)=>balance-payment.amount,loan.amount);
 }
+function loanMonth(day) {
+  const [year,month]=day.split('/').map(Number);
+  return year*12+month-1;
+}
+function payoffMonth(loan, today=D()) {
+  const minimum=loanYen(loan.minimum);
+  if(!minimum || !loanRemaining(loan))return '';
+  let month=Math.max(loanMonth(loan.day),loanMonth(today));
+  let balance=BigInt(loan.amount);
+  const scheduled=new Map(), installment=BigInt(minimum);
+  for(const payment of loan.payments){
+    const when=loanMonth(payment.day), amount=BigInt(payment.amount);
+    if(when<month)balance-=amount;
+    else scheduled.set(when,(scheduled.get(when)||0n)+amount);
+  }
+  const finalMonth=()=>{
+    const last=BigInt(month)+(balance-1n)/installment;
+    return (last/12n)+'年'+(last%12n+1n)+'月';
+  };
+  for(const when of [...scheduled.keys()].sort((a,b)=>a-b)){
+    const beforePayment=BigInt(when-month)*installment;
+    if(balance<=beforePayment)return finalMonth();
+    balance-=beforePayment;
+    const paid=scheduled.get(when);
+    balance-=paid>installment?paid:installment;
+    if(balance<=0n)return Math.floor(when/12)+'年'+(when%12+1)+'月';
+    month=when+1;
+  }
+  return finalMonth();
+}
+function suggestedPayment(loan, day) {
+  if(!loan.minimum || !day)return '';
+  const paid=loan.payments.filter(p=>p.day.slice(0,7)===day.slice(0,7)).reduce((sum,p)=>sum+p.amount,0);
+  return Math.max(0,Math.min(loanRemaining(loan),loan.minimum-paid)) || '';
+}
+function updatePaymentDate(id) {
+  const loan=S.loans.find(l=>l.id===id), input=$('repay-amount-'+id);
+  if(loan && !input.dataset.edited)input.value=suggestedPayment(loan,loanDate($('repay-day-'+id).value));
+}
+function previewLoanPlan() {
+  const preview=$('new-loan-plan'), day=loanDate($('loan-day').value);
+  const amount=loanYen($('loan-amount').value), minimum=loanYen($('loan-minimum').value);
+  preview.textContent=day && amount && minimum?'完済予定：'+payoffMonth({day,amount,minimum,payments:[]})+'（貸付月と今月の遅い方から毎月返済）':'';
+}
+function optionalMinimum(field) {
+  if(field.validity?.badInput)return null;
+  if(field.value==='')return 0;
+  return loanYen(field.value)||null;
+}
+function saveLoanMinimum(id) {
+  const loan=S.loans.find(l=>l.id===id), amount=optionalMinimum($('minimum-'+id));
+  if(!loan)return;
+  if(amount===null){T('毎月の最低返済額は1円以上の整数で入力してください');return}
+  if(amount)loan.minimum=amount;else delete loan.minimum;
+  R(1);T('返済計画を更新しました');
+}
 function loanCard(loan) {
   const remaining = loanRemaining(loan), key = E(loan.id);
   const today = D().replace(/\//g,'-'), start = loan.day.replace(/\//g,'-');
+  const paymentDate = today < start ? start : today;
   const borrower = N[loan.lender==='a'?'b':'a'];
   const rows = [...loan.payments].reverse().sort((a,b)=>b.day.localeCompare(a.day)).map(p=>`
     <li class="r"><span>${fdt(p.day,1)}　<b>${Y(p.amount)}</b></span>
     <button type="button" class="market-link" data-loan="${key}" value="${E(p.id)}" onclick="cancelLoanPayment(this.dataset.loan,this.value)">取消</button></li>`).join('');
   return `<article class="c loan-card"><div class="r"><h3>${E(loan.note||'貸し付け')}</h3><b>${remaining?'残り '+Y(remaining):'完済'}</b></div>
     <div>${N[loan.lender]} → ${borrower}</div><small>${fdt(loan.day,1)}に ${Y(loan.amount)} を貸付 · 返済済み ${Y(loan.amount-remaining)}</small>
-    ${remaining?`<details><summary>返済を記録</summary><div class="g">
-    <label>返済日<input type="date" id="repay-day-${key}" min="${start}" value="${today}"></label>
-    <label>返した金額（円）<input type="number" inputmode="numeric" id="repay-amount-${key}" min="1" max="${remaining}" placeholder="0"></label></div>
-    <button type="button" value="${key}" onclick="addLoanPayment(this.value)">返済を保存</button></details>`:''}
+    ${remaining?`${loan.minimum?`<div class="loan-plan"><b>完済予定　${payoffMonth(loan)}</b><small>毎月 ${Y(loan.minimum)} を返済した場合（利息なし）</small></div>`:''}
+    <details><summary>返済を記録</summary><div class="g">
+    <label>返済日<input type="date" id="repay-day-${key}" min="${start}" value="${paymentDate}" data-loan="${key}" oninput="updatePaymentDate(this.dataset.loan)"></label>
+    <label>返した金額（円）<input type="number" inputmode="numeric" id="repay-amount-${key}" min="1" max="${remaining}" value="${suggestedPayment(loan,loanDate(paymentDate))}" placeholder="0" oninput="this.dataset.edited=this.value?'1':''"></label></div>
+    <button class="record-edit-button" type="button" data-loan="${key}" onclick="const field=$('repay-amount-'+this.dataset.loan);field.value=field.max;field.dataset.edited='1'">残額すべて（${Y(remaining)}）</button>
+    <button type="button" value="${key}" onclick="addLoanPayment(this.value)">返済を保存</button></details>
+    <details><summary>毎月の最低返済額を${loan.minimum?'変更':'設定'}</summary>
+    <label>毎月の最低返済額（円・任意）<input type="number" inputmode="numeric" min="1" id="minimum-${key}" value="${loan.minimum||''}"></label>
+    <button type="button" value="${key}" onclick="saveLoanMinimum(this.value)">返済計画を保存</button></details>`:''}
     <details><summary>履歴・訂正（返済${loan.payments.length}件）</summary>
     ${rows?`<ul>${rows}</ul>`:''}<div class="s">${fdt(loan.day,1)}　貸付 ${Y(loan.amount)}</div>
     <button type="button" class="record-edit-cancel" value="${key}" onclick="removeLoan(this.value)">この貸し付けを削除</button></details></article>`;
@@ -260,8 +323,10 @@ function loanTab() {
     <div>${N.a} が貸した分<strong class="A">¥${balance('a')}</strong></div><div>${N.b} が貸した分<strong class="B">¥${balance('b')}</strong></div></div></div>
     <details class="c" ${S.loans.length?'':'open'}><summary>貸したお金を記録</summary>
     <div class="g"><label>貸した人<select id="loan-lender"><option value="a">${N.a}</option><option value="b">${N.b}</option></select></label>
-    <label>貸した日<input id="loan-day" type="date" value="${D().replace(/\//g,'-')}"></label></div>
-    <label>貸した金額（円）<input id="loan-amount" type="number" min="1" inputmode="numeric" placeholder="0"></label>
+    <label>貸した日<input id="loan-day" oninput="previewLoanPlan()" type="date" value="${D().replace(/\//g,'-')}"></label></div>
+    <label>貸した金額（円）<input id="loan-amount" oninput="previewLoanPlan()" type="number" min="1" inputmode="numeric" placeholder="0"></label>
+    <label>毎月の最低返済額（円・任意）<input id="loan-minimum" type="number" inputmode="numeric" min="1" placeholder="例：3000" oninput="previewLoanPlan()"></label>
+    <div class="s" id="new-loan-plan" aria-live="polite"></div>
     <label>メモ（任意）<input id="loan-note" maxlength="80" placeholder="例：旅行代"></label>
     <button type="button" onclick="addLoan()">貸し付けを保存</button></details>
     <h3>返済待ち（${open.length}件）</h3>${cards(open)||'<p class="s">返済待ちの貸し付けはありません。</p>'}
@@ -270,7 +335,9 @@ function loanTab() {
 function addLoan() {
   const lender=$('loan-lender').value, day=loanDate($('loan-day').value), amount=loanYen($('loan-amount').value);
   if(!day || !['a','b'].includes(lender) || !amount){T('貸した人・日付・1円以上の整数の金額を入力してください');return}
-  S.loans.unshift({id:loanId(),lender,day,amount,note:$('loan-note').value.trim(),payments:[]});
+  const minimum=optionalMinimum($('loan-minimum'));
+  if(minimum===null){T('毎月の最低返済額は1円以上の整数で入力してください');return}
+  S.loans.unshift({id:loanId(),lender,day,amount,...(minimum?{minimum}:{}),note:$('loan-note').value.trim(),payments:[]});
   R(1);T('貸し付けを記録しました');
 }
 function addLoanPayment(id) {
@@ -298,12 +365,13 @@ function removeLoan(id) {
 function readLoanRows(rows) {
   const loans=new Map(), payments=[];
   const validId=id=>/^[a-zA-Z0-9_-]{1,64}$/.test(id||'');
-  for(const [type,id,paymentId,person,date,value,note] of rows) {
+  for(const [type,id,paymentId,person,date,value,note,minimum] of rows) {
     const day=loanDate(date), amount=loanYen(value);
     if(!validId(id)||!day||!amount)return null;
     if(type==='返済' && validId(paymentId)){payments.push({loanId:id,id:paymentId,day,amount});continue}
     if(type!=='貸付'||loans.has(id)||!['1人目','2人目'].includes(person))return null;
-    loans.set(id,{id,lender:person==='1人目'?'a':'b',day,amount,note:note||'',payments:[]});
+    if(minimum && !loanYen(minimum))return null;
+    loans.set(id,{id,...(minimum?{minimum:loanYen(minimum)}:{}),lender:person==='1人目'?'a':'b',day,amount,note:note||'',payments:[]});
   }
   for(const {loanId,...payment} of payments) {
     const loan=loans.get(loanId);
@@ -624,8 +692,8 @@ w('#口座名');w('持ち主','番号','口座名');['a','b'].forEach(k=>S.acc[k
 w('#口座残高');w('月','持ち主','番号','残高');S.as.forEach(x=>{if(x.da)['a','b'].forEach(k=>x['d'+k].forEach((v,i)=>{if(v)w(x.y+'年'+x.m,pn(k),i+1,v)}))});
 w('#固定費');w('名前','引落日','金額','負担','状態','払う人','識別子','適用開始日');S.fx.forEach(f=>w(U(f.n),f.d,f.v,pn(f.p),f.off?'停止':'有効',pn(f.q),f.id||'',f.from||''));
 w('#固定費処理');w('記録キー','処理済み','確認待ち');[...new Set([...(S.pk||[]),...(S.autoPending||[])])].forEach(k=>w(k,(S.pk||[]).includes(k)?'はい':'',(S.autoPending||[]).includes(k)?'はい':''));
-w('#貸し借り');w('区分','貸付ID','返済ID','貸した人','日付','金額','メモ');
-S.loans.forEach(l=>{w('貸付',l.id,'',pn(l.lender),l.day,l.amount,l.note);l.payments.forEach(p=>w('返済',l.id,p.id,'',p.day,p.amount,''))});
+w('#貸し借り');w('区分','貸付ID','返済ID','貸した人','日付','金額','メモ','毎月の最低返済額');
+S.loans.forEach(l=>{w('貸付',l.id,'',pn(l.lender),l.day,l.amount,l.note,l.minimum||'');l.payments.forEach(p=>w('返済',l.id,p.id,'',p.day,p.amount,'',''))});
 return L.join('\r\n')}
 function csvP(t){const R=[];let r=[],c='',q=0;t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h=='"'){if(t[i+1]=='"'){c+='"';i++}else q=0}else c+=h}else if(h=='"')q=1;else if(h==',')r.push(c),c='';else if(h=='\n'||h=='\r'){if(h=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';R.push(r);r=[]}else c+=h}
 if(c||r.length){r.push(c);R.push(r)}return R}
