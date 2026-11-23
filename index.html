@@ -53,6 +53,8 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 14p
 .market-compare{scroll-margin-top:12px}.market-compare summary{font-size:16px}.market-quote{display:grid;gap:4px;background:var(--nav-active);padding:12px;border-radius:10px;margin-top:12px;overflow-wrap:anywhere}.market-compare-button{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-top:10px}
 .loan-page h2{margin:0 0 12px;font-size:22px}.loan-page strong,.loan-page label{display:block}.loan-page strong{font-size:21px;font-variant-numeric:tabular-nums}.loan-page input,.loan-page select,.loan-page .g>*{min-width:0}.loan-page label{margin-top:6px}.loan-page summary{cursor:pointer;padding:10px 0;font-weight:700}.loan-card small{color:var(--sub)}.loan-card h3{margin:0;overflow-wrap:anywhere}.loan-card .r>b{white-space:nowrap}.loan-card ul{list-style:none;padding:0;margin:0}.loan-card details{margin-top:6px;border-top:1px solid var(--line)}
 .loan-plan{margin:10px 0;padding:10px 12px;background:var(--nav-active);border-radius:10px}.loan-plan small{display:block;margin-top:2px}
+.income-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:1px solid var(--line);border-radius:14px;padding:3px;margin-bottom:12px}.income-switch button{margin:0;background:transparent;color:var(--sub)}.income-switch button[aria-pressed=true]{background:var(--ink);color:var(--bg)}.income-panel label,.income-panel small{display:block}.income-panel small{color:var(--sub)}.income-panel summary{cursor:pointer;padding:8px 0}.income-panel .g>*{min-width:0}.income-panel .l{overflow-wrap:anywhere}
+.settlement-breakdown{border-top:1px solid var(--line);margin-top:10px;padding-top:6px;font-size:13px}.settlement-breakdown .r{flex-wrap:wrap;margin-top:4px}.settlement-breakdown span{color:var(--sub)}
 </style><script>let DESIGN='classic';try{DESIGN=localStorage.getItem('futari-design')==='pink'?'pink':'classic'}catch(e){}function applyDesign(value){DESIGN=value==='pink'?'pink':'classic';document.documentElement.dataset.design=DESIGN;document.querySelector('meta[name="theme-color"]').content=DESIGN==='pink'?'#a5416c':'#1b2540'}applyDesign(DESIGN)</script></head><body>
 <div class="w"><h1><span class="brand-title"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></span><button type="button" id="settingLink" class="setting-link" aria-label="設定を開く" aria-current="false" onclick="go(5)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1-1.6 2.8-.2-.1a1.7 1.7 0 0 0-1.9-.1 1.7 1.7 0 0 0-.9 1.6v.2h-3.2v-.2a1.7 1.7 0 0 0-1.2-1.5 1.7 1.7 0 0 0-1.9.3l-.2.1-2.8-1.6.1-.2a1.7 1.7 0 0 0-.1-1.9 1.7 1.7 0 0 0-1.6-.9H4v-3.2h.2a1.7 1.7 0 0 0 1.5-1.2 1.7 1.7 0 0 0-.3-1.9l-.1-.2 1.6-2.8.2.1a1.7 1.7 0 0 0 1.9-.1 1.7 1.7 0 0 0 .9-1.6V3h3.2v.2a1.7 1.7 0 0 0 1.2 1.5 1.7 1.7 0 0 0 1.9-.3l.2-.1 2.8 1.6-.1.2a1.7 1.7 0 0 0 .1 1.9 1.7 1.7 0 0 0 1.6.9h.2v3.2h-.2a1.7 1.7 0 0 0-1.5 1.4Z"></path></svg><span>設定</span></button></h1><div class="sync-status" id="syncbar" aria-live="polite" data-state="" style="display:none"></div><div id="v"></div></div><div class="toast" id="tt"></div>
 <div class="lg" id="lg"><div><h1 class="auth-brand"><img class="brand-icon" src="icon.png" alt="" aria-hidden="true"><span>ふたりの財布</span></h1><div id="authView"></div><div class="c" id="hc" style="display:none"><h3>家計を始める</h3><p class="s" style="margin:0 0 8px">はじめての方は「新しい家計を作る」を押してください。パートナーがすでに作っている場合は、教えてもらった招待コードを入力します。</p><button onclick="hnew()">新しい家計を作る</button><label style="display:block;margin-top:14px">招待コード（パートナーから聞いたもの）</label><input id="hcode" autocapitalize="characters" autocomplete="off"><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="hjoin()">招待コードで参加する</button><div style="text-align:center;margin-top:10px"><a class="s" onclick="lo()">ログアウト</a></div></div><div id="lgM" class="s" style="margin-top:10px;text-align:center">読み込み中…</div></div></div>
@@ -71,7 +73,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 <script>
 let N={a:'ひとり目',b:'ふたり目'};const Y=n=>(Math.round(n)<0?'−':'')+'¥'+Math.abs(Math.round(n)).toLocaleString('ja-JP'),$=i=>document.getElementById(i),V=i=>Math.max(0,+$(i).value||0);
 const DEF=['メイン口座','貯金用口座','証券口座','NISA','現金','口座6','口座7','口座8','口座9','口座10'];
-const newHouseholdState=()=>({tab:0,goal:2000000,day:25,lp:'a',autoPending:[],share:[],colors:{},acc:{a:DEF.slice(),b:DEF.slice()},led:[],it:[],as:[],fx:[],loans:[]});
+const newHouseholdState=()=>({tab:0,goal:2000000,day:25,lp:'a',autoPending:[],share:[],colors:{},acc:{a:DEF.slice(),b:DEF.slice()},led:[],it:[],as:[],fx:[],loans:[],incomes:[]});
 let S=newHouseholdState();let ON=0,OB=1,UAC=0;
 let LED_EDIT=null,CACHE_HID='';
 let opt='';const who=p=>p=='a'?N.a:N.b,E=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),nm=s=>s.replace(/\{a\}/g,()=>N.a).replace(/\{b\}/g,()=>N.b),cm=()=>(new Date().getMonth()+1)+'月',p2=v=>String(v).padStart(2,'0'),fy=m=>{const t=new Date();return +m>t.getMonth()+1?t.getFullYear()-1:t.getFullYear()},D=()=>{const t=new Date();return t.getFullYear()+'/'+p2(t.getMonth()+1)+'/'+p2(t.getDate())},yd=v=>{v=String(v);if(/^\d{4}\/\d{2}\/\d{2}$/.test(v))return v;const m=v.match(/^(\d{1,2})\/(\d{1,2})$/);return m?fy(m[1])+'/'+p2(m[1])+'/'+p2(m[2]):v};
@@ -81,19 +83,28 @@ S.it.forEach(x=>{x.g=x.g||'未分類';x.tm=x.tm||'in';x.tr=x.tr||(/食品/.test(
 const dd=d=>{const t=new Date();t.setHours(0,0,0,0);const L=(y,m)=>new Date(y,m+1,0).getDate();let x=new Date(t.getFullYear(),t.getMonth(),Math.min(d,L(t.getFullYear(),t.getMonth())));if(x<t){const y=t.getMonth()==11?t.getFullYear()+1:t.getFullYear(),m=(t.getMonth()+1)%12;x=new Date(y,m,Math.min(d,L(y,m)))}return Math.round((x-t)/864e5)};
 function T(m){const e=$('tt');e.textContent=m;e.classList.add('on');clearTimeout(T.t);T.t=setTimeout(()=>e.classList.remove('on'),1800)}
 function dl(i){const e=S.led[i];if(e&&e.fxkey)S.autoPending=S.autoPending.filter(k=>k!==e.fxkey);S.led.splice(i,1);S.cf=-1;R(1);T('削除しました')}
-function hist(){const L=S.led,mo=e=>{const m=e.d.match(/^(\d{4})\/(\d{2})/);return m?m[1]+'/'+m[2]:''},ms=[...new Set(L.map(mo).filter(Boolean))].sort().reverse(),lab=k=>{const m=k.split('/');return m[0]+'年'+(+m[1])+'月'};
+function hist(){const L=S.led,mo=e=>{const m=e.d.match(/^(\d{4})\/(\d{2})/);return m?m[1]+'/'+m[2]:''},receipts=S.incomes.flatMap(item=>item.entries.map(entry=>({item,entry,month:entry.day.slice(0,7)}))),count=L.length+receipts.length,ms=[...new Set([...L.map(mo),...receipts.map(r=>r.month)].filter(Boolean))].sort().reverse(),lab=k=>{const m=k.split('/');return m[0]+'年'+(+m[1])+'月'};
 const cur=S.hm=='all'||(S.hm&&ms.includes(S.hm))?S.hm:(ms[0]||'all'),ix=ms.indexOf(cur);
 const row=([e,i])=>{const[x,y]=burden(e),o=e.p=='a'?'b':'a',pt=[e.a?`<span class="A">${N.a}だけ ${Y(e.a)}</span>`:null,e.b?`<span class="B">${N.b}だけ ${Y(e.b)}</span>`:null,e.h?`ふたりで負担 ${Y(e.h)}（${N.a} ${entryRate(e)}%・${N.b} ${100-entryRate(e)}%）`:null].filter(Boolean).join('　');
 return`<div class="l"><div class="r history-record-head"><div class="r record-info" style="justify-content:flex-start;gap:10px">${dtb(e.d)}<div>${e.s}${e.fx?' <span class="chip">固定費・自動記録</span>':''}<div class="s">${who(e.p)}が支払い</div></div></div><div class="record-row-actions"><b>${Y(e.a+e.b+e.h)}</b><button type="button" class="record-edit-button" aria-label="${e.s}の記録を編集" onclick="openRecordEdit(${i})">編集</button>${S.cf===i?`<a onclick="dl(${i})" style="color:#d9544f;font-weight:700;padding-left:10px">削除する</a>`:`<span class="del" onclick="S.cf=${i};R(1)">×</span>`}</div></div>
 <div class="s" style="margin-top:6px;line-height:1.8;background:var(--bg);border-radius:10px;padding:6px 10px">内訳：${pt}<br>負担：<span class="A">${N.a} ${Y(x)}</span>　<span class="B">${N.b} ${Y(y)}</span><br><b class="ok">${who(e.p)}が${who(o)}の分 ${Y(o=='a'?x:y)} を立て替え</b></div></div>`};
+const receiptRows=list=>list.map(({item,entry})=>`<div class="l"><div class="r"><b>${E(item.name)} <span class="chip">収入</span></b><b>${Y(entry.amount)}</b></div><small>${fdt(entry.day,1)} · ${incomeSettlementLabel(item,entry)}</small></div>`).join('');
+const monthlyReceipts=receipts.filter(r=>r.month===cur);
 const pv=cur!='all'&&ms[ix+1],nx=cur!='all'&&ix>0&&ms[ix-1],ar=(k,t)=>`<a ${k?`onclick="S.hm='${k}';R(1)"`:''} style="font-size:24px;padding:0 12px;opacity:${k?1:.25}">${t}</a>`;
-const sel=`<div class="r" style="margin:8px 0">${ar(pv,'‹')}<select id="hmS" onchange="S.hm=this.value;R(1)" style="flex:1">${ms.map(k=>`<option value="${k}"${k==cur?' selected':''}>${lab(k)}（${L.filter(e=>mo(e)==k).length}件）</option>`).join('')}<option value="all"${cur=='all'?' selected':''}>すべて（${L.length}件）</option></select>${ar(nx,'›')}</div>`;
+const sel=`<div class="r" style="margin:8px 0">${ar(pv,'‹')}<select id="hmS" onchange="S.hm=this.value;R(1)" style="flex:1">${ms.map(k=>`<option value="${k}"${k==cur?' selected':''}>${lab(k)}（${L.filter(e=>mo(e)==k).length+receipts.filter(r=>r.month===k).length}件）</option>`).join('')}<option value="all"${cur=='all'?' selected':''}>すべて（${count}件）</option></select>${ar(nx,'›')}</div>`;
 let body='';
-if(!L.length)body='<div class="c s">まだ記録がありません。</div>';
-else if(cur!='all'){const ps=L.map((e,i)=>[e,i]).filter(([e])=>mo(e)==cur),t=ps.reduce((n,[e])=>n+e.a+e.b+e.h,0),ba=ps.reduce((n,[e])=>n+burden(e)[0],0),bb=ps.reduce((n,[e])=>n+burden(e)[1],0),pa=ps.filter(([e])=>e.p=='a').reduce((n,[e])=>n+e.a+e.b+e.h,0),net=ps.reduce((n,[e])=>n+(e.p=='a'?burden(e)[1]:-burden(e)[0]),0);
-body=`<div class="c"><div class="r"><h3>${lab(cur)}のまとめ</h3><span class="s">${ps.length}件</span></div><div class="big" style="font-size:24px">${Y(t)}</div><div class="s">この月の支出の合計</div><div class="g" style="margin-top:10px"><div class="s"><b class="A">${N.a}</b><br>負担 ${Y(ba)}<br>支払った額 ${Y(pa)}</div><div class="s"><b class="B">${N.b}</b><br>負担 ${Y(bb)}<br>支払った額 ${Y(t-pa)}</div></div><div class="s" style="margin-top:8px"><b class="ok">${Math.round(net)==0?'この月の貸し借りはありません':(net>0?N.a:N.b)+'が、この月に '+Y(Math.abs(net))+' 多く立て替え'}</b></div></div><div class="c">${ps.map(row).join('')}</div>`}
-else{const g={};L.forEach((e,i)=>{const k=mo(e)?lab(mo(e)):'日付なし';(g[k]=g[k]||[]).push([e,i])});body=Object.entries(g).map(([k,a])=>`<div class="c"><div class="r"><h3>${k}</h3><span class="s">${a.length}件｜合計 ${Y(a.reduce((n,[e])=>n+e.a+e.b+e.h,0))}</span></div>${a.map(row).join('')}</div>`).join('')}
-return`<a onclick="go(0)" style="color:var(--a-text,var(--a));font-weight:700">‹ 記録にもどる</a><h3 style="margin:10px 2px">過去の履歴（${L.length}件）</h3>`+(L.length?sel:'')+body+'<p class="s" style="text-align:center">記録の「編集」から内容を変更できます。削除もこの画面でできます。</p>'}
+if(!count)body='<div class="c s">まだ記録がありません。</div>';
+else if(cur!='all'){const ps=L.map((e,i)=>[e,i]).filter(([e])=>mo(e)==cur),t=ps.reduce((n,[e])=>n+e.a+e.b+e.h,0),ba=ps.reduce((n,[e])=>n+burden(e)[0],0),bb=ps.reduce((n,[e])=>n+burden(e)[1],0),pa=ps.filter(([e])=>e.p=='a').reduce((n,[e])=>n+e.a+e.b+e.h,0),net=ps.reduce((n,[e])=>n+(e.p=='a'?burden(e)[1]:-burden(e)[0]),0)+monthlyReceipts.reduce((n,{item,entry})=>n+incomeSettlement(item.person,entry),0);
+body=`<div class="c"><div class="r"><h3>${lab(cur)}のまとめ</h3><span class="s">${ps.length+monthlyReceipts.length}件</span></div><div class="big" style="font-size:24px">${Y(t)}</div><div class="s">この月の支出の合計</div><div class="g" style="margin-top:10px"><div class="s"><b class="A">${N.a}</b><br>負担 ${Y(ba)}<br>支払った額 ${Y(pa)}</div><div class="s"><b class="B">${N.b}</b><br>負担 ${Y(bb)}<br>支払った額 ${Y(t-pa)}</div></div><div class="s" style="margin-top:8px"><b class="ok">${Math.round(net)==0?'この月の貸し借りはありません':(net>0?N.b:N.a)+' から '+(net>0?N.a:N.b)+' へ '+Y(Math.abs(net))+' でこの月の精算'}</b></div></div><div class="c">${ps.map(row).join('')}${receiptRows(monthlyReceipts)}</div>`}
+else{
+  const months=L.some(e=>!mo(e))?[...ms,'']:ms;
+  body=months.map(month=>{
+    const ps=L.map((e,i)=>[e,i]).filter(([e])=>mo(e)===month), inc=receipts.filter(r=>r.month===month);
+    const spending=ps.reduce((n,[e])=>n+e.a+e.b+e.h,0);
+    return `<div class="c"><div class="r"><h3>${month?lab(month):'日付なし'}</h3><span class="s">${ps.length+inc.length}件｜支出 ${Y(spending)}</span></div>${ps.map(row).join('')}${receiptRows(inc)}</div>`;
+  }).join('');
+}
+return`<a onclick="go(0)" style="color:var(--a-text,var(--a));font-weight:700">‹ 記録にもどる</a><h3 style="margin:10px 2px">過去の履歴（${count}件）</h3>`+(count?sel:'')+body+'<p class="s" style="text-align:center">支払いは「編集」、収入の取り消しは固定費タブの「収入」から操作できます。</p>'}
 function saveSettingNames(){
   const first=$('na').value.trim(), second=$('nb').value.trim();
   if(!first||!second||first===second){T('2人の名前を、別々に入力してください');return}
@@ -151,11 +162,22 @@ ${recoveryBackupCard()}
 <div class="c"><h3>資産・貯金</h3><div class="g"><div><label>残高を入力する日</label><input id="sd" type="number" inputmode="numeric" value="${S.day}"></div><div><label>貯金目標（円）</label><input id="sg" type="number" inputmode="numeric" value="${S.goal}"></div></div><button type="button" onclick="saveSettingAssets()">資産・貯金の設定を保存</button></div>
 <div class="c"><h3>アカウント管理</h3><div class="s">ログイン中：${E(SY.email)}</div><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line);margin-top:8px" onclick="sendPasswordReset()">パスワード再設定メールを送る</button><div id="accountMsg" class="s" style="margin:6px 0">${E(SY.accountMsg||'')}</div><div class="s" style="margin-top:10px">招待コード：<b style="font-size:16px;letter-spacing:1px;color:var(--ink);user-select:all">${E(SY.code)}</b></div><div class="s">パートナーに、このコードを伝えてください。相手は、ログイン後に「招待コードで参加する」を選びます。</div><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line);margin-top:8px" onclick="ccopy()">招待コードをコピー</button><div id="sy" class="s" style="margin:6px 0 8px">${SY.ok||''}</div><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="lo()">ログアウト</button></div>
 <div class="c danger-card"><h3>アカウントを削除</h3><p class="s danger-copy" style="margin:0">削除すると、このアカウントと参加者情報を削除します。パートナーがいる家計の記録は引き続き利用できます。自分ひとりの家計では、家計の全データも削除されます。この操作は元に戻せません。</p>${SY.deleteOpen?`<label style="display:block;margin-top:10px">現在のパスワード</label><input id="delPw" type="password" autocomplete="current-password"><label style="display:block;margin-top:8px">確認のため「削除」と入力</label><input id="delConfirm" autocomplete="off"><button onclick="deleteAccount()">アカウントとデータを削除する</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="closeAccountDelete()">キャンセル</button>`:`<button style="background:var(--bg);color:#b42318;border:1px solid #efc3c1" onclick="openAccountDelete()">アカウント削除の手続きへ</button>`}</div>
-<div class="c"><h3>データのCSV入出力</h3><p class="s" style="margin:0 0 8px">記録・相場・資産・固定費・貸し借り・設定を、ひとつのCSVにまとめます。ExcelやGoogleスプレッドシートでも開けます。</p><button onclick="cex()">CSVを書き出す</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="cshow()">CSVの中身を表示してコピー</button><label style="display:block;margin:12px 0 4px">CSVを読み込む</label><input type="file" id="cf" accept=".csv,text/csv,text/plain" onchange="cfile(this)"><div id="imp" class="s" style="margin-top:8px"></div></div>
+<div class="c"><h3>データのCSV入出力</h3><p class="s" style="margin:0 0 8px">記録・相場・資産・固定費・収入・貸し借り・設定を、ひとつのCSVにまとめます。ExcelやGoogleスプレッドシートでも開けます。</p><button onclick="cex()">CSVを書き出す</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="cshow()">CSVの中身を表示してコピー</button><label style="display:block;margin:12px 0 4px">CSVを読み込む</label><input type="file" id="cf" accept=".csv,text/csv,text/plain" onchange="cfile(this)"><div id="imp" class="s" style="margin-top:8px"></div></div>
 <div class="c" style="margin-top:14px"><h3>過去の情報をリセット</h3><p class="s" style="margin:0">消す項目を選んでください。名前などの設定は残ります。</p><label style="display:flex;align-items:center;margin:8px 0;font-size:14px;color:var(--ink)"><input type="checkbox" id="r1" checked style="width:auto;padding:0;margin:0 10px 0 0">記録（支払いの履歴）</label><label style="display:flex;align-items:center;margin:4px 0 8px 28px;font-size:13px;color:var(--sub)"><input type="checkbox" id="r5" checked style="width:auto;padding:0;margin:0 8px 0 0">いまの貸し借りは繰越として残す</label><label style="display:flex;align-items:center;margin:8px 0;font-size:14px;color:var(--ink)"><input type="checkbox" id="r2" checked style="width:auto;padding:0;margin:0 10px 0 0">相場の価格履歴（品目は残ります）</label><label style="display:flex;align-items:center;margin:8px 0;font-size:14px;color:var(--ink)"><input type="checkbox" id="r3" checked style="width:auto;padding:0;margin:0 10px 0 0">資産の月ごとの履歴</label><label style="display:flex;align-items:center;margin:8px 0;font-size:14px;color:var(--ink)"><input type="checkbox" id="r4" style="width:auto;padding:0;margin:0 10px 0 0">固定費（登録した項目）</label><button style="background:#d9544f;color:#fff" onclick="rq()">リセットする…</button><div id="rz" class="s" style="margin-top:8px"></div></div>`}
-const net=()=>S.led.reduce((n,e)=>n+(e.p=='a'?burden(e)[1]:-burden(e)[0]),0);
+const expenseNet=()=>S.led.reduce((n,e)=>n+(e.p=='a'?burden(e)[1]:-burden(e)[0]),0);
 function pm(o){$('m').classList.toggle('on',o)}
-function go(i){if(ON)return;LED_EDIT=null;if(S.tab==3)cap();S.tab=i;S.rr=0;S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.ae=-1;S.ag=0;S.ad=-1;R()}
+function incomeSettlement(person,entry){
+  if(person==='both')return 0;
+  const rate=entry.r ?? shareAt(entry.day);
+  const first=Number((BigInt(entry.amount)*BigInt(rate)+50n)/100n);
+  return person==='a' ? first-entry.amount : first;
+}
+function incomeNet(){
+  return S.incomes.reduce((balance,item)=>item.entries.reduce(
+    (subtotal,entry)=>subtotal+incomeSettlement(item.person,entry),balance),0);
+}
+const net=()=>expenseNet()+incomeNet();
+function go(i){if(ON)return;if(i===4)fixedView='expense';LED_EDIT=null;if(S.tab==3)cap();S.tab=i;S.rr=0;S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.ae=-1;S.ag=0;S.ad=-1;R()}
 function autoNotice(){const keys=S.autoPending||[],items=S.led.filter(e=>e.fxkey&&keys.includes(e.fxkey));if(!items.length)return'';const total=items.reduce((n,e)=>n+e.a+e.b+e.h,0),names=items.slice(0,3).map(e=>E(e.s)).join('、'),more=items.length>3?` ほか${items.length-3}件`:'';return`<div class="c auto-note" role="status"><b>固定費を自動で記録しました</b><div class="s" style="margin-top:3px">${items.length}件・合計 ${Y(total)}：${names}${more}</div><div class="actions"><button class="ghost" onclick="ackAuto()">このまま記録する</button><button class="warn" onclick="undoAuto()">${UAC?'もう一度押して取り消す':'取り消す'}</button></div></div>`}
 function ackAuto(){S.autoPending=[];UAC=0;R();T('固定費の記録を確認しました')}
 function undoAuto(){if(!UAC){UAC=1;R(1);return}const keys=new Set(S.autoPending||[]);S.led=S.led.filter(e=>!keys.has(e.fxkey));S.autoPending=[];UAC=0;R();T('固定費の自動記録を取り消しました')}
@@ -167,9 +189,24 @@ function recordAmounts(prefix){const amounts=['a','b','h'].map(key=>parseRecordA
 function recordDateChanged(kind){if(kind=='e'){LED_EDIT.draft.date=$('ed').value;$('edl').textContent='日付';$('eshareHint').textContent=recordEditShareHint();return}const date=$(kind+'d').value,day=date?date.replace(/-/g,'/'):D(),rate=shareAt(day);$(kind+'dl').textContent='日付 '+(date?fdt(day):'（今日）');$('lshareHint').textContent='この記録日の負担割合：'+N.a+' '+rate+'%・'+N.b+' '+(100-rate)+'%';if($('split-choice').checked)previewSplit()}
 function payerButtons(prefix,person=S.lp){return`<div class="payer-label" id="${prefix}payerLabel">払った人</div><div class="payer-choice" id="${prefix}payer" role="group" aria-labelledby="${prefix}payerLabel"><input type="hidden" id="${prefix}p" value="${person}"><button type="button" class="payer-a" data-person="a" aria-pressed="${person=='a'}" onclick="setPayer('${prefix}','a')">${N.a}</button><button type="button" class="payer-b" data-person="b" aria-pressed="${person=='b'}" onclick="setPayer('${prefix}','b')">${N.b}</button></div>`}
 function setPayer(prefix,person){$(`${prefix}p`).value=person;$(`${prefix}payer`).querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.person==person)));if(prefix=='e'&&LED_EDIT){LED_EDIT.draft.p=person;return}S.lp=person;save()}
-function led(){const n=net(),pos=50-Math.max(-1,Math.min(1,n/30000))*42,debtor=n>0?N.b:N.a;
-return`<div class="c"><h3>立替の差額</h3><div class="balance-labels"><span class="A">${N.a}</span><span class="B">${N.b}</span></div><div class="bar"><i style="left:${pos}%"></i></div>
-<div class="big">${Math.round(n)==0?'ぴったり':Y(Math.abs(n))}</div><div class="s">${Math.round(n)==0?'どちらも貸し借りなし':`${n>0?N.a:N.b}が多く立て替え中。<b class="ok">次の支払いは${debtor}</b>が持つと、精算せずに差が縮まります。`}</div></div>${autoNotice()}
+function settlementBreakdown(expenseBalance){
+  const lines=[];
+  const direction=(from,to,value)=>`${from} → ${to}　${Y(value)}`;
+  for(const person of ['a','b']){
+    const received=S.incomes.filter(item=>item.person===person && item.entries.length);
+    if(!received.length)continue;
+    const partner=person==='a'?'b':'a';
+    const portion=received.reduce((total,item)=>item.entries.reduce(
+      (sum,entry)=>sum+Math.abs(incomeSettlement(person,entry)),total),0);
+    lines.push(`<div class="r"><span>収入の分配</span><b>${direction(N[person],N[partner],portion)}</b></div>`);
+  }
+  if(!lines.length)return '';
+  const expense=expenseBalance===0?'差額なし':direction(expenseBalance>0?N.b:N.a,expenseBalance>0?N.a:N.b,Math.abs(expenseBalance));
+  return `<div class="settlement-breakdown"><div class="r"><span>支払いの立替</span><b>${expense}</b></div>${lines.join('')}</div>`;
+}
+function led(){const expense=expenseNet(),n=expense+incomeNet(),pos=50-Math.max(-1,Math.min(1,n/30000))*42,debtor=n>0?N.b:N.a;
+return`<div class="c"><h3>立替の差額</h3>${S.incomes.some(i=>i.person!=='both'&&i.entries.length)?'<div class="s">受け取った収入の分配を含みます。</div>':''}<div class="balance-labels"><span class="A">${N.a}</span><span class="B">${N.b}</span></div><div class="bar"><i style="left:${pos}%"></i></div>
+<div class="big">${Math.round(n)==0?'ぴったり':Y(Math.abs(n))}</div><div class="s">${Math.round(n)==0?'精算する差額はありません':`<b>${debtor}</b>から<b>${n>0?N.a:N.b}</b>に渡すと精算できます。`}</div>${settlementBreakdown(expense)}</div>${autoNotice()}
 <div class="c"><h3>支払いを記録</h3><div class="g"><div><label for="ls">お店・品目</label><input id="ls"></div><div><label id="ldl" for="ld">日付 ${fdt(D())}</label><input id="ld" type="date" style="min-width:0" oninput="recordDateChanged('l')" value="${D().replace(/\//g,'-')}"></div></div>${payerButtons('l')}
 <label class="split-choice"><input type="checkbox" id="split-choice" aria-controls="split-fields" onchange="toggleSplit()">按分にする</label>
 <div id="normal-fields">${amountFields('l')}</div>
@@ -180,7 +217,7 @@ return`<div class="c"><h3>立替の差額</h3><div class="balance-labels"><span 
   <div><label for="split-b">${N.b}が思う金額（円）</label><input id="split-b" type="text" inputmode="numeric" placeholder="0" oninput="previewSplit()"></div></div>
   <div class="s" id="split-rate"></div><div class="split-preview" id="split-preview" aria-live="polite"></div>
 </div><button onclick="addL()">記録する</button></div>
-${upc()}<div class="c"><div class="r"><h3>最近の記録</h3><span class="s">${S.led.length}件</span></div>${S.led.length?'':'<div class="s">まだ記録がありません。上のフォームから最初の支払いを入れましょう。</div>'}${S.led.slice(0,4).map((e,i)=>{const[x,y]=burden(e);return`<div class="l r recent-record"><div class="r record-info" style="justify-content:flex-start;gap:10px">${dtb(e.d)}<div>${e.s}${e.fx?' <span class="chip">固定費・自動記録</span>':''}<div class="s">${who(e.p)}が支払い</div></div></div><div class="record-amount"><div><span class="s">合計 </span><b>${Y(e.a+e.b+e.h)}</b></div><div><span class="s">${who(e.p=='a'?'b':'a')}の負担分 </span><b class="${e.p=='a'?'B':'A'}">${Y(e.p=='a'?y:x)}</b></div><button type="button" class="record-edit-button" aria-label="${e.s}の記録を編集" onclick="openRecordEdit(${i})">編集</button></div></div>`}).join('')}<div class="l" style="text-align:center"><a onclick="go(6)" style="color:var(--a-text,var(--a));font-weight:700">履歴をすべて見る（${S.led.length}件）›</a></div></div>`}
+${upc()}<div class="c"><div class="r"><h3>最近の支払い</h3><span class="s">${S.led.length}件</span></div>${S.led.length?'':'<div class="s">まだ支払いの記録がありません。</div>'}${S.led.slice(0,4).map((e,i)=>{const[x,y]=burden(e);return`<div class="l r recent-record"><div class="r record-info" style="justify-content:flex-start;gap:10px">${dtb(e.d)}<div>${e.s}${e.fx?' <span class="chip">固定費・自動記録</span>':''}<div class="s">${who(e.p)}が支払い</div></div></div><div class="record-amount"><div><span class="s">合計 </span><b>${Y(e.a+e.b+e.h)}</b></div><div><span class="s">${who(e.p=='a'?'b':'a')}の負担分 </span><b class="${e.p=='a'?'B':'A'}">${Y(e.p=='a'?y:x)}</b></div><button type="button" class="record-edit-button" aria-label="${e.s}の記録を編集" onclick="openRecordEdit(${i})">編集</button></div></div>`}).join('')}<div class="l" style="text-align:center"><a onclick="go(6)" style="color:var(--a-text,var(--a));font-weight:700">支払い・収入の履歴を見る（${S.led.length+S.incomes.reduce((n,i)=>n+i.entries.length,0)}件）›</a></div></div>`}
 function openRecordEdit(i){const entry=S.led[i];if(!entry){T('記録が見つかりません。履歴を開き直してください');return}LED_EDIT={original:entry,base:JSON.parse(JSON.stringify(entry)),fingerprint:jd(entry),fingerprintCount:S.led.filter(x=>jd(x)===jd(entry)).length,returnTab:S.tab==6?6:0,returnMonth:S.hm,draft:{s:String(entry.s||'').replace(/&(amp|lt|gt|quot);/g,(_,key)=>({amp:'&',lt:'<',gt:'>',quot:'"'}[key])),date:/^\d{4}\/\d{2}\/\d{2}$/.test(entry.d)?entry.d.replace(/\//g,'-'):'',p:entry.p,a:String(entry.a||''),b:String(entry.b||''),h:String(entry.h||'')}};S.cf=-1;S.tab=7;R()}
 function recordEditRate(){const edit=LED_EDIT,day=edit.draft.date.replace(/-/g,'/');return day==edit.base.d?entryRate(edit.base):shareAt(day||edit.base.d)}
 function recordEditShareHint(){const r=recordEditRate();return 'この記録日の負担割合：'+N.a+' '+r+'%・'+N.b+' '+(100-r)+'%'}
@@ -667,7 +704,116 @@ function sv(){const sk=AM||ck(),[sy,sm]=sk.split('/').map(Number),cur=fe(sy,sm),
 ['a','b'].forEach(k=>{for(let i=0;i<10;i++){const el=$(k+'n'+i);na[k].push(el?E(el.value.trim()||'口座'+(i+1)):S.acc[k][i]);vs[k].push(el?V(k+'v'+i):(cur&&cur['d'+k]?cur['d'+k][i]||0:0))}});
 const a=vs.a.reduce((n,v)=>n+v,0),b=vs.b.reduce((n,v)=>n+v,0);if(a+b<=0){T('残高を入力してください');return}
 S.acc=na;const e={y:sy,m:sm+'月',a,b,da:vs.a,db:vs.b};if(cur)Object.assign(cur,e);else{S.as.push(e);ny()}delete DR[sk];NC=1;R();T(sy+'年'+sm+'月分を保存しました')}
-function fix(){const t={a:0,b:0},on=S.fx.filter(f=>!f.off),rate=shareAt(D());on.forEach(f=>{if(f.p=='h'){const a=Math.round(f.v*rate/100);t.a+=a;t.b+=f.v-a}else t[f.p]+=f.v});const td=new Date().getDate(),by=S.fs=='v'?(x,y)=>y.v-x.v:(x,y)=>x.d-y.d,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)';
+let fixedView='expense';
+const incomeIntervals=new Map([[0,'今回のみ'],[1,'毎月'],[2,'2か月ごと'],[3,'3か月ごと'],[6,'半年ごと'],[12,'毎年']]);
+function fix(){
+  const choices=[['expense','固定費'],['income','収入']].map(([key,label])=>
+    `<button type="button" aria-pressed="${fixedView===key}" onclick="fixedView='${key}';R(1)">${label}</button>`).join('');
+  return `<div class="income-switch" role="group" aria-label="表示する項目">${choices}</div>`+
+    (fixedView==='income'?incomePanel():fixedExpenses());
+}
+function incomeDue(item){
+  if(item.stopped || (!item.interval && item.entries.length))return '';
+  const [year,month,day]=item.start.split('/').map(Number);
+  const target=new Date(year,month-1+item.entries.length*item.interval,1);
+  const y=target.getFullYear(), m=target.getMonth();
+  return y+'/'+p2(m+1)+'/'+p2(Math.min(day,new Date(y,m+1,0).getDate()));
+}
+function incomeOwner(person){return person==='both'?'ふたりで受取':who(person)}
+function incomeSettlementLabel(item,entry){
+  if(item.person==='both')return 'ふたりで受取 · 差額なし';
+  const partner=item.person==='a'?N.b:N.a;
+  return incomeOwner(item.person)+'が受取 · '+partner+'の取り分 '+Y(Math.abs(incomeSettlement(item.person,entry)));
+}
+function incomePanel(){
+  const today=D(), month=today.slice(0,7);
+  const history=S.incomes.flatMap(item=>item.entries.map(entry=>({item,entry}))).sort((a,b)=>b.entry.day.localeCompare(a.entry.day));
+  const sum=history.filter(({entry})=>entry.day.startsWith(month)).reduce((total,{entry})=>total+BigInt(entry.amount),0n);
+  const pending=S.incomes.map(item=>({item,due:incomeDue(item)})).filter(row=>row.due).sort((a,b)=>a.due.localeCompare(b.due));
+  const schedules=pending.map(({item,due})=>{
+    const key=E(item.id);
+    return `<details class="l"><summary>${E(item.name)}　${Y(item.amount)}<small>${fdt(due,1)}予定 · ${incomeIntervals.get(item.interval)} · ${incomeOwner(item.person)}</small></summary>
+      <div class="g"><label>受け取った日<input id="income-day-${key}" type="date" max="${today.replaceAll('/','-')}" value="${(due<=today?due:today).replaceAll('/','-')}"></label>
+      <label>受け取った金額（円）<input id="income-value-${key}" type="number" inputmode="numeric" min="1" value="${item.amount}"></label></div>
+      <button type="button" value="${key}" data-due="${due}" onclick="receiveIncome(this.value,this.dataset.due)">受け取った金額を記録</button>
+      <button class="record-edit-cancel" type="button" value="${key}" onclick="endIncome(this.value)">今後の予定を終了</button></details>`;
+  }).join('');
+  const rows=history.map(({item,entry})=>`<div class="l"><div class="r"><b>${E(item.name)}</b><b>${Y(entry.amount)}</b></div>
+    <small>${fdt(entry.day,1)} · ${incomeSettlementLabel(item,entry)}</small>
+    ${entry===item.entries.at(-1)?`<button class="record-edit-button" data-id="${E(item.id)}" value="${E(entry.due)}" onclick="undoIncome(this.dataset.id,this.value)">入金を取り消す</button>`:''}</div>`).join('');
+  return `<section class="income-panel"><div class="c"><h3>今月の入金額</h3><div class="big">¥${sum.toLocaleString('ja-JP')}</div></div>
+    <div class="c"><h3>収入を追加</h3><label>収入の名前<input id="income-name" maxlength="80" placeholder="例：児童手当"></label>
+    <div class="g"><label>1回に受け取る金額（円）<input id="income-amount" type="number" min="1" inputmode="numeric" placeholder="0"></label>
+    <label>受け取る日（初回）<input id="income-start" type="date" value="${today.replaceAll('/','-')}" oninput="updateIncomeAction()"></label></div>
+    <div class="g"><label>受け取る人<select id="income-person"><option value="" selected disabled>選んでください</option><option value="both">ふたり（共同口座などで受け取る）</option><option value="a">${N.a}</option><option value="b">${N.b}</option></select></label>
+    <label>繰り返し<select id="income-interval">${[...incomeIntervals].map(([v,text])=>`<option value="${v}">${text}</option>`).join('')}</select></label></div>
+    <small>ひとりが受け取ったら、相手の取り分を立替精算に含めます。取り分は、受け取った日の負担割合で決まります。</small>
+    <button type="button" id="income-action" onclick="addIncome()">入金を記録</button></div>
+    <div class="c"><h3>次の入金予定</h3>${schedules||'<small>登録されている予定はありません。</small>'}</div>
+    <div class="c"><h3>入金履歴</h3>${rows||'<small>まだ入金はありません。</small>'}</div></section>`;
+}
+function updateIncomeAction(){
+  $('income-action').textContent=loanDate($('income-start').value)>D()?'入金予定を登録':'入金を記録';
+}
+function addIncome(){
+  const name=$('income-name').value.trim(), amount=loanYen($('income-amount').value);
+  const start=loanDate($('income-start').value), interval=Number($('income-interval').value), person=$('income-person').value;
+  if(!['a','b','both'].includes(person)){T('受け取る人を選んでください');return}
+  if(!name || !amount || !start || !incomeIntervals.has(interval)){
+    T('収入の名前、受け取る日、金額（1円以上の整数）を確認してください');return;
+  }
+  const received=start<=D();
+  S.incomes.unshift({id:loanId(),name,amount,start,person,interval,entries:received?[{due:start,day:start,amount,r:shareAt(start)}]:[]});
+  R(1);T(received?'入金を記録しました':'入金予定を登録しました');
+}
+function receiveIncome(id,expected){
+  const item=S.incomes.find(x=>x.id===id);
+  if(!item || incomeDue(item)!==expected)return;
+  const day=loanDate($('income-day-'+id).value), amount=loanYen($('income-value-'+id).value);
+  if(!day || day>D() || !amount){T('今日までの入金日と1円以上の整数の金額を入力してください');return}
+  item.entries.push({due:expected,day,amount,r:shareAt(day)});
+  R(1);T('入金を記録しました');
+}
+function endIncome(id){
+  const item=S.incomes.find(x=>x.id===id);
+  if(!item || !confirm(item.name+'の今後の入金予定を終了しますか？'))return;
+  if(item.entries.length)item.stopped=true;else S.incomes=S.incomes.filter(x=>x!==item);
+  R(1);T('予定を終了しました');
+}
+function undoIncome(id,due){
+  const item=S.incomes.find(x=>x.id===id);
+  if(!item || item.entries.at(-1)?.due!==due || !confirm(item.name+'の入金記録を取り消しますか？'))return;
+  item.entries.pop();
+  if(item.stopped && !item.entries.length)S.incomes=S.incomes.filter(x=>x!==item);
+  R(1);T('入金を取り消しました');
+}
+function readIncomeRows(rows){
+  const items=new Map(), receipts=[];
+  for(const [kind,id,name,owner,date,value,frequency,status,scheduled,rateText] of rows){
+    const day=loanDate(date), amount=loanYen(value);
+    if(!/^[a-zA-Z0-9_-]{1,64}$/.test(id||'') || !day || !amount)return null;
+    if(kind==='入金'){
+      const receipt={id,day,amount,due:loanDate(scheduled)};
+      if(rateText!==undefined && rateText!==''){
+        const rate=Number(rateText);
+        if(!Number.isInteger(rate)||rate<0||rate>100)return null;
+        receipt.r=rate;
+      }
+      receipts.push(receipt);continue;
+    }
+    const person={'1人目':'a','2人目':'b','ふたり':'both'}[owner], interval=Number(frequency);
+    if(kind!=='予定'||items.has(id)||!name||!['a','b','both'].includes(person)||!incomeIntervals.has(interval))return null;
+    items.set(id,{id,name,amount,start:day,person,interval,...(status==='終了'?{stopped:true}:{}),entries:[]});
+  }
+  for(const {id,...entry} of receipts.sort((a,b)=>a.due.localeCompare(b.due))){
+    const item=items.get(id);
+    if(!item||!entry.due||incomeDue({...item,stopped:false})!==entry.due)return null;
+    item.entries.push(entry);
+  }
+  return [...items.values()];
+}
+
+function fixedExpenses(){const t={a:0,b:0},on=S.fx.filter(f=>!f.off),rate=shareAt(D());on.forEach(f=>{if(f.p=='h'){const a=Math.round(f.v*rate/100);t.a+=a;t.b+=f.v-a}else t[f.p]+=f.v});const td=new Date().getDate(),by=S.fs=='v'?(x,y)=>y.v-x.v:(x,y)=>x.d-y.d,gh='background:var(--bg);color:var(--ink);border:1px solid var(--line)';
 const sel=p=>`<option value="h"${p=='h'?' selected':''}>ふたりで負担（設定の割合）</option><option value="a"${p=='a'?' selected':''}>${N.a}のみ</option><option value="b"${p=='b'?' selected':''}>${N.b}のみ</option>`;
 const qs=q=>`<option value="a"${q=='a'?' selected':''}>${N.a}</option><option value="b"${q=='b'?' selected':''}>${N.b}</option>`;
 const ed=f=>`<div class="l"><label>名前</label><input id="en" value="${nm(f.n)}"><div class="g"><div><label>引落日</label><input id="ed" type="number" inputmode="numeric" value="${f.d}"></div><div><label>金額</label><input id="ev" type="number" inputmode="numeric" value="${f.v}"></div></div><label>負担</label><select id="ep" onchange="if(this.value!='h')$('eq').value=this.value">${sel(f.p)}</select><label>払う人（引落元）</label><select id="eq">${qs(f.q)}</select><div class="g"><button onclick="fsv(${f.i})">保存</button><button style="${gh}" onclick="S.fe=-1;R(1)">キャンセル</button></div><div class="g"><button style="${gh}" onclick="fof(${f.i})">${f.off?'再開する':'一時停止（解約）'}</button><button style="background:#d9544f;color:#fff" onclick="fdl(${f.i})">${S.fc===f.i?'もう一度押して削除':'削除'}</button></div></div>`;
@@ -683,6 +829,8 @@ function af(){const d=V('fd'),v=V('fv');if(!v||!Number.isInteger(d)||d<1||d>31){
 let PD=null;
 const U=s=>String(s).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&amp;/g,'&'),Q=v=>{v=String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},pn=p=>p=='h'?'半々':p=='a'?'1人目':'2人目';
 function csvO(){const L=[],w=(...a)=>L.push(a.map(Q).join(','));
+w('#収入');w('区分','識別子','収入名','受取人','日付','金額','間隔（月）','状態','予定日','入金時の1人目の割合（％）');
+S.incomes.forEach(i=>{w('予定',i.id,i.name,i.person==='both'?'ふたり':pn(i.person),i.start,i.amount,i.interval,i.stopped?'終了':'','','');i.entries.forEach(e=>w('入金',i.id,'','',e.day,e.amount,'','',e.due,e.r??shareAt(e.day)))});
 w('#設定');w('1人目の名前','2人目の名前','残高入力日','貯金目標','1人目の色','2人目の色');w(U(N.a),U(N.b),S.day,S.goal,S.colors.a||'',S.colors.b||'');
 w('#負担割合');w('適用開始日','1人目の割合（％）');S.share.forEach(x=>w(x.from,x.a));
 w('#記録');w('日付','店名','1人目だけの金額','2人目だけの金額','ふたりで負担する金額','払った人','適用した1人目の割合（％）','固定費の自動記録','固定費の記録キー');S.led.forEach(e=>w(e.d,U(e.s),e.a,e.b,e.h,pn(e.p),e.r===undefined?'':entryRate(e),e.fx?'はい':'',e.fxkey||''));
@@ -697,7 +845,7 @@ S.loans.forEach(l=>{w('貸付',l.id,'',pn(l.lender),l.day,l.amount,l.note,l.mini
 return L.join('\r\n')}
 function csvP(t){const R=[];let r=[],c='',q=0;t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h=='"'){if(t[i+1]=='"'){c+='"';i++}else q=0}else c+=h}else if(h=='"')q=1;else if(h==',')r.push(c),c='';else if(h=='\n'||h=='\r'){if(h=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';R.push(r);r=[]}else c+=h}
 if(c||r.length){r.push(c);R.push(r)}return R}
-function csvI(t){const o={};let k=null,h=0;csvP(t).forEach(r=>{if(r.length==1&&!r[0].trim())return;if(['#設定','#負担割合','#記録','#相場','#資産','#口座名','#口座残高','#固定費','#固定費処理','#貸し借り'].includes(r[0].trim())){k=r[0].trim().slice(1);o[k]=[];h=1;return}if(!k)return;if(h){h=0;return}o[k].push(r)});
+function csvI(t){const o={};let k=null,h=0;csvP(t).forEach(r=>{if(r.length==1&&!r[0].trim())return;if(['#設定','#負担割合','#記録','#相場','#資産','#口座名','#口座残高','#固定費','#固定費処理','#貸し借り','#収入'].includes(r[0].trim())){k=r[0].trim().slice(1);o[k]=[];h=1;return}if(!k)return;if(h){h=0;return}o[k].push(r)});
 const n=v=>Math.max(0,+String(v).replace(/[,，¥円\s]/g,'')||0),pf=v=>v=='半々'||v=='h'?'h':v=='2人目'||v=='b'?'b':'a',dt=v=>{v=String(v).trim();const y=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);if(y)return y[1]+'/'+p2(y[2])+'/'+p2(y[3]);const m=v.match(/(\d{1,2})\D+(\d{1,2})\D*$/);return m?fy(m[1])+'/'+p2(m[1])+'/'+p2(m[2]):''},P={};
 if(o['設定']&&o['設定'][0]){const s=o['設定'][0];if(s[0]&&s[1]&&s[0]!=s[1])P.N={a:E(s[0]),b:E(s[1])};P.day=Math.min(31,Math.max(1,n(s[2])||25));P.goal=n(s[3])||2000000;if(s.length>=6)P.colors=normalizePersonColors({a:s[4],b:s[5]})}
 if(o['負担割合'])P.share=o['負担割合'].map(r=>({from:dt(r[0]),a:Number(r[1])})).filter(x=>x.from&&Number.isInteger(x.a)&&x.a>=0&&x.a<=100).sort((x,y)=>x.from.localeCompare(y.from));
@@ -709,18 +857,19 @@ if(o['口座残高']&&P.as)o['口座残高'].forEach(r=>{const x=P.as.find(y=>y.
 if(P.as)P.as.forEach(x=>delete x.k);
 if(o['固定費'])P.fx=o['固定費'].filter(r=>r[0]).map(r=>{const f={n:E(r[0]),d:Math.min(31,Math.max(1,n(r[1])||1)),v:n(r[2]),p:pf(r[3]),off:r[4]=='停止',q:r[5]?(pf(r[5])=='b'?'b':'a'):(pf(r[3])=='b'?'b':'a')};if(r[6])f.id=String(r[6]);if(r[7]&&dt(r[7]))f.from=dt(r[7]);return f});
 if(o['固定費処理']){P.pk=o['固定費処理'].filter(r=>r[0]&&r[1]=='はい').map(r=>r[0]);P.autoPending=o['固定費処理'].filter(r=>r[0]&&r[2]=='はい').map(r=>r[0])}
+if(o['収入']){P.incomes=readIncomeRows(o['収入']);if(!P.incomes)return null}
 if(o['貸し借り']){P.loans=readLoanRows(o['貸し借り']);if(!P.loans)return null}
 return Object.keys(P).length?P:null}
 async function cfile(el){const f=el.files[0];if(!f)return;const b=await f.arrayBuffer();let t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(e){t=new TextDecoder('shift_jis').decode(b)}
 PD=csvI(t);el.value='';if(!PD){$('imp').innerHTML='<b class="B">このCSVは読み込めません。</b>「CSVを書き出す」で作ったファイルの形式（#記録 などの見出し行つき）にしてください。';return}
-const c=[['loans','貸し借り','件'],['led','記録','件'],['it','相場','品目'],['as','資産','か月分'],['fx','固定費','件']].filter(x=>PD[x[0]]).map(x=>x[1]+' '+PD[x[0]].length+x[2]);if(PD.N||PD.day||PD.share)c.unshift('設定');
+const c=[['incomes','収入','件'],['loans','貸し借り','件'],['led','記録','件'],['it','相場','品目'],['as','資産','か月分'],['fx','固定費','件']].filter(x=>PD[x[0]]).map(x=>x[1]+' '+PD[x[0]].length+x[2]);if(PD.N||PD.day||PD.share)c.unshift('設定');
 $('imp').innerHTML='<div style="margin-bottom:6px">読み込む内容：<b>'+c.join('／')+'</b><br>CSVにある項目は、いまのデータと置き換わります。</div><button onclick="capp()">置き換えて読み込む</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="PD=null;$(\'imp\').innerHTML=\'\'">やめる</button>'}
-function capp(){if(!PD)return;const P=PD;PD=null;if(P.N)N=P.N;if(P.day){S.day=P.day;S.goal=P.goal}['loans','led','it','as','fx','acc','share','colors','pk','autoPending'].forEach(k=>{if(P[k])S[k]=P[k]});S.led.sort(byd);nfx();S.gf='';S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('CSVを読み込みました')}
+function capp(){if(!PD)return;const P=PD;PD=null;if(P.N)N=P.N;if(P.day){S.day=P.day;S.goal=P.goal}['incomes','loans','led','it','as','fx','acc','share','colors','pk','autoPending'].forEach(k=>{if(P[k])S[k]=P[k]});S.led.sort(byd);nfx();S.gf='';S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('CSVを読み込みました')}
 let RZ=[];
 function rq(){const k=[['r1','記録',S.led.length+'件'],['r2','相場の価格履歴',S.it.reduce((n,x)=>n+x.h.length,0)+'件'],['r3','資産の履歴',S.as.length+'か月分'],['r4','固定費',S.fx.length+'件']].filter(x=>$(x[0]).checked);
 if(!k.length){T('消す項目を選んでください');return}
-const cy=k.some(x=>x[0]=='r1')&&$('r5').checked;RZ=k.map(x=>x[0]);if(cy)RZ.push('c');$('rz').innerHTML='<div style="margin-bottom:6px"><b style="color:#d9544f">'+k.map(x=>x[1]+' '+x[2]).join('／')+'</b> を削除します。元に戻せません。'+(cy&&Math.round(net())?'<br>いまの差額 '+Y(Math.abs(net()))+' は「繰越」として1件残ります。':'')+'<br><a onclick="cex()" style="color:var(--a-text,var(--a));font-weight:700">先にCSVで書き出す</a></div><button style="background:#d9544f;color:#fff" onclick="rdo()">本当に削除する</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="RZ=[];$(\'rz\').innerHTML=\'\'">やめる</button>'}
-function rdo(){const z=RZ;RZ=[];if(z.includes('r1')){const n=net();S.led=z.includes('c')&&Math.round(n)?[{d:D(),s:'繰越',a:n<0?-n:0,b:n>0?n:0,h:0,p:n>0?'a':'b'}]:[];S.autoPending=[];UAC=0}if(z.includes('r2'))S.it.forEach(x=>x.h=[]);if(z.includes('r3'))S.as=[];if(z.includes('r4'))S.fx=[];S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('リセットしました')}
+const cy=k.some(x=>x[0]=='r1')&&$('r5').checked;RZ=k.map(x=>x[0]);if(cy)RZ.push('c');$('rz').innerHTML='<div style="margin-bottom:6px"><b style="color:#d9544f">'+k.map(x=>x[1]+' '+x[2]).join('／')+'</b> を削除します。元に戻せません。'+(cy&&Math.round(expenseNet())?'<br>支払い分の差額 '+Y(Math.abs(expenseNet()))+' は「繰越」として1件残ります。':'')+'<br><a onclick="cex()" style="color:var(--a-text,var(--a));font-weight:700">先にCSVで書き出す</a></div><button style="background:#d9544f;color:#fff" onclick="rdo()">本当に削除する</button><button style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="RZ=[];$(\'rz\').innerHTML=\'\'">やめる</button>'}
+function rdo(){const z=RZ;RZ=[];if(z.includes('r1')){const n=expenseNet();S.led=z.includes('c')&&Math.round(n)?[{d:D(),s:'繰越',a:n<0?-n:0,b:n>0?n:0,h:0,p:n>0?'a':'b'}]:[];S.autoPending=[];UAC=0}if(z.includes('r2'))S.it.forEach(x=>x.h=[]);if(z.includes('r3'))S.as=[];if(z.includes('r4'))S.fx=[];S.cf=-1;S.fe=-1;S.fc=-1;S.ie=-1;S.ic=-1;S.tab=0;R();T('リセットしました')}
 function ap(){let c=0;const t=new Date(),td=D(),L=(y,m)=>new Date(y,m+1,0).getDate();
 S.fx.forEach(f=>{if(f.off)return;const fm=f.from.split('/');let y=+fm[0],m=+fm[1]-1;
 while(y<t.getFullYear()||(y==t.getFullYear()&&m<=t.getMonth())){const ym=y+'/'+p2(m+1),ymd=ym+'/'+p2(Math.min(f.d,L(y,m))),key=f.id+'@'+ym;
@@ -736,6 +885,8 @@ let sb=null,AUTH_MODE='login',RECOVERY=0,SY={last:{},busy:0,q:0,ok:'',err:'',rea
 const jd=o=>JSON.stringify(o,(k,v)=>v&&typeof v=='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v),hm=()=>{const t=new Date();return p2(t.getHours())+':'+p2(t.getMinutes())},mk=e=>e.d?e.d.slice(0,7).replace('/','-'):'none',typing=()=>{const a=document.activeElement;return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)};
 function syStat(t){if(SY.conflict)t='同期できません：別の変更と競合しました。設定からCSVを書き出してください';SY.ok=t;const e=$('sy');if(e)e.textContent=t;const b=$('syncbar');if(b){b.textContent=t;b.dataset.state=t.includes('できません')||t.includes('切れました')||t.includes('読み込めません')?'error':t.includes('中…')?'loading':'ok';b.style.display=t?'block':'none'}}
 function shared(){const d={'sync/cfg':{N,goal:S.goal,day:S.day,acc:S.acc,pk:S.pk,autoPending:S.autoPending||[],share:S.share,colors:normalizePersonColors(S.colors)},'sync/it':{list:S.it},'sync/as':{list:S.as},'sync/fx':{list:S.fx}},m={};
+S.incomes.forEach(income=>{d['income/'+income.id]={income}});
+Object.keys({...SY.last,...SY.sending}).filter(k=>k.startsWith('income/')&&!d[k]).forEach(k=>{d[k]={income:null}});
 S.loans.forEach(loan=>{d['loan/'+loan.id]={loan}});
 Object.keys({...SY.last,...SY.sending}).filter(k=>k.startsWith('loan/')&&!d[k]).forEach(k=>{d[k]={loan:null}});
 S.led.forEach(e=>{const k='ledger/'+mk(e);(m[k]=m[k]||[]).push(e)});Object.keys(SY.last).forEach(k=>{if(k.startsWith('ledger/')&&!m[k])m[k]=[]});Object.keys(m).forEach(k=>d[k]={list:m[k]});return d}
@@ -743,15 +894,16 @@ function syConflict(){SY.conflict=true;SY.err='同期できません：別の変
 async function syPush(){if(!sb||!SY.ready||SY.conflict)return;if(SY.busy){SY.q=1;return}SY.busy=1;syStat('同期中…');
 try{do{SY.q=0;const d=shared(),changes=[];for(const k of Object.keys(d)){const j=jd(d[k]),base=SY.last[k];if(base===j)continue;if(base!==undefined&&SY.versions[k]===undefined)throw Error('同期情報が不足しています');changes.push({key:k,data:JSON.parse(j),exists:base!==undefined,expected:base===undefined?null:SY.versions[k],base,serialized:j});SY.sending[k]=j}if(!changes.length)continue;const payload=changes.map(({key,data,exists,expected})=>({key,data,exists,expected}));const result=await sb.rpc('sync_docs_batch',{p_household_id:SY.hid,p_changes:payload});for(const c of changes)delete SY.sending[c.key];if(result.error){if(result.error.code==='40001'||String(result.error.message||'').includes('sync_conflict')){syConflict();break}throw result.error}if(!Array.isArray(result.data)||result.data.length!==changes.length){syConflict();break}const returned=new Map(result.data.map(x=>[x.doc_key,x.doc_updated_at]));if(returned.size!==changes.length||changes.some(c=>!returned.has(c.key))){syConflict();break}for(const c of changes)if(!SY.conflict&&(SY.last[c.key]===c.base||SY.last[c.key]===c.serialized)){SY.last[c.key]=c.serialized;SY.versions[c.key]=returned.get(c.key)}if(!SY.conflict)SY.err=''}while(SY.q&&!SY.conflict);syStat(SY.err||'同期済み '+hm())}
 catch(e){SY.sending={};SY.err='同期できませんでした（'+((e&&(e.code||e.message))||'エラー')+'）';syStat(SY.err)}SY.busy=0}
-function syApply(docs,pref){let ch=0;docs.forEach(d=>{const k=pref+'/'+d.id,v=d.data();if(!v)return;const j=jd(v),cur=shared()[k];if(cur&&jd(cur)===j){SY.last[k]=j;SY.versions[k]=d.updated_at??null;return}if(cur&&(SY.last[k]!==undefined || pref==='loan')&&jd(cur)!==SY.last[k]){if(j===SY.sending[k]){SY.last[k]=j;SY.versions[k]=d.updated_at??null;return}if(j!==SY.last[k])syConflict();return}SY.last[k]=j;SY.versions[k]=d.updated_at??null;ch=1;
+function syApply(docs,pref){let ch=0;docs.forEach(d=>{const k=pref+'/'+d.id,v=d.data();if(!v)return;const j=jd(v),cur=shared()[k];if(cur&&jd(cur)===j){SY.last[k]=j;SY.versions[k]=d.updated_at??null;return}if(cur&&(SY.last[k]!==undefined || pref==='loan' || pref==='income')&&jd(cur)!==SY.last[k]){if(j===SY.sending[k]){SY.last[k]=j;SY.versions[k]=d.updated_at??null;return}if(j!==SY.last[k])syConflict();return}SY.last[k]=j;SY.versions[k]=d.updated_at??null;ch=1;
 if(k=='sync/cfg'){S.colors=normalizePersonColors(v.colors);applyPersonColors();if(v.N&&v.N.a&&v.N.b)N=v.N;S.goal=v.goal||S.goal;S.day=v.day||S.day;if(v.acc)S.acc=v.acc;S.pk=v.pk||[];S.autoPending=Array.isArray(v.autoPending)?v.autoPending:[];S.share=Array.isArray(v.share)?v.share.filter(x=>x&&/^\d{4}\/\d{2}\/\d{2}$/.test(x.from)&&Number.isInteger(x.a)&&x.a>=0&&x.a<=100).sort((x,y)=>x.from.localeCompare(y.from)):[]}
 else if(k=='sync/it')S.it=v.list||[];else if(k=='sync/as')S.as=v.list||[];else if(k=='sync/fx')S.fx=v.list||[];
+else if(pref==='income'){S.incomes=S.incomes.filter(i=>i.id!==d.id);if(v.income && v.income.id===d.id)S.incomes.unshift(v.income)}
 else if(pref==='loan'){S.loans=S.loans.filter(l=>l.id!==d.id);if(v.loan && v.loan.id===d.id)S.loans.unshift(v.loan)}
 else if(pref=='ledger')S.led=S.led.filter(e=>mk(e)!==d.id).concat(v.list||[])});
 if(ch)S.led.sort(byd);return ch}
 const rowDoc=r=>({id:r.key.split('/')[1],data:()=>r.data,updated_at:r.updated_at});
-function syRows(rows){let ch=0;['sync','ledger','loan'].forEach(p=>{if(syApply(rows.filter(r=>r.key.startsWith(p+'/')).map(rowDoc),p))ch=1});return ch}
-function preserveLocalHouseholdSnapshot(remoteDocs){const local=shared(),meaningful=S.loans.length||S.led.length||S.it.length||S.as.length||S.fx.length||(S.pk||[]).length||(S.share||[]).length||N.a!=='ひとり目'||N.b!=='ふたり目'||S.goal!==2000000||S.day!==25||Object.keys(S.colors||{}).length||jd(S.acc)!==jd({a:DEF.slice(),b:DEF.slice()});if(!meaningful)return true;const remote=new Map(remoteDocs.map(row=>[row.key,row.data]));if(remote.size===Object.keys(local).length&&Object.keys(local).every(key=>remote.has(key)&&jd(remote.get(key))===jd(local[key])))return true;const snapshot=JSON.stringify({S,N}),canonical=jd(local);let hash=2166136261;for(let i=0;i<canonical.length;i++)hash=Math.imul(hash^canonical.charCodeAt(i),16777619);let key='fns-recovery-'+(CACHE_HID||'unknown')+'-'+(hash>>>0).toString(16);try{const existing=localStorage.getItem(key);if(existing&&existing!==snapshot)key+='-'+Date.now()+'-'+Math.random().toString(36).slice(2);localStorage.setItem(key,snapshot);return localStorage.getItem(key)===snapshot}catch(e){return false}}
+function syRows(rows){let ch=0;['sync','ledger','loan','income'].forEach(p=>{if(syApply(rows.filter(r=>r.key.startsWith(p+'/')).map(rowDoc),p))ch=1});return ch}
+function preserveLocalHouseholdSnapshot(remoteDocs){const local=shared(),meaningful=S.incomes.length||S.loans.length||S.led.length||S.it.length||S.as.length||S.fx.length||(S.pk||[]).length||(S.share||[]).length||N.a!=='ひとり目'||N.b!=='ふたり目'||S.goal!==2000000||S.day!==25||Object.keys(S.colors||{}).length||jd(S.acc)!==jd({a:DEF.slice(),b:DEF.slice()});if(!meaningful)return true;const remote=new Map(remoteDocs.map(row=>[row.key,row.data]));if(remote.size===Object.keys(local).length&&Object.keys(local).every(key=>remote.has(key)&&jd(remote.get(key))===jd(local[key])))return true;const snapshot=JSON.stringify({S,N}),canonical=jd(local);let hash=2166136261;for(let i=0;i<canonical.length;i++)hash=Math.imul(hash^canonical.charCodeAt(i),16777619);let key='fns-recovery-'+(CACHE_HID||'unknown')+'-'+(hash>>>0).toString(16);try{const existing=localStorage.getItem(key);if(existing&&existing!==snapshot)key+='-'+Date.now()+'-'+Math.random().toString(36).slice(2);localStorage.setItem(key,snapshot);return localStorage.getItem(key)===snapshot}catch(e){return false}}
 async function syPull(init){const{data,error}=await sb.from('docs').select('key,data,updated_at').eq('household_id',SY.hid);if(error){SY.err='読み込めませんでした（'+(error.message||error.code)+'）';syStat(SY.err);return false}
 if(init){if(!preserveLocalHouseholdSnapshot(data)){SY.err='端末の記録を退避できませんでした。同期を停止しています';syStat(SY.err);return false}S=newHouseholdState();N={a:'ひとり目',b:'ふたり目'};SY.last={};SY.versions={};LED_EDIT=null;AM='';DR={};NC=0;UAC=0}const ch=syRows(data);nfx();if(!init&&ch){if(!typing())R(1)}if(SY.conflict){syStat(SY.err);return false}SY.err='';syStat('同期済み '+hm());return true}
 async function syStart(){if(!await syPull(1))return false;let guard;try{guard=await sb.rpc('sync_docs_enforced',{p_household_id:SY.hid})}catch(e){guard={error:e}}if(!guard||guard.error||guard.data!==true){SY.err='同期の安全設定を確認できません。読み込みを停止しました';syStat(SY.err);return false}SY.ready=1;if(SY.ch)sb.removeChannel(SY.ch);
@@ -803,7 +955,7 @@ const NAV_ITEMS=[
 [2,'相場','品目の相場','<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 19h18M5 16l5-5 4 3 6-8M16 6h4v4"></path></svg>'],
 [3,'資産','資産を確認','<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M3 10h18M15 14h3"></path><circle cx="17" cy="14" r=".7"></circle></svg>'],
 [8,'貸し借り','借入と返済を管理','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h17l-4-4m5 12H4l4 4"></path></svg>'],
-[4,'固定費','固定費を管理','<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h3M15 14h1"></path></svg>']
+[4,'固定費','固定費と収入を管理','<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h3M15 14h1"></path></svg>']
 ];
 function R(k){applyPersonColors();if(S.tab==3&&!NC)cap();NC=0;const ac=ap();opt=`<option value="a"${S.lp=='a'?' selected':''}>${N.a}</option><option value="b"${S.lp=='b'?' selected':''}>${N.b}</option>`;save();$('v').innerHTML=ON?onboard():[led,led,mkt,ast,fix,set,hist,recordEdit,loanTab][S.tab]();if(!ON&&S.tab===2)filterMarket();$('t').innerHTML=ON?'':NAV_ITEMS.map(([i,label,title,icon])=>{const active=i==(S.tab==6||S.tab==7?0:S.tab);return`<button type="button" class="${active?'on':''}" aria-label="${title}" title="${title}" aria-current="${active?'page':'false'}" onclick="go(${i})">${icon}<span>${label}</span></button>`}).join('');$('t').parentElement.style.display=ON?'none':'';$('settingLink').style.display=ON?'none':'';$('settingLink').classList.toggle('active',S.tab==5);$('settingLink').setAttribute('aria-current',S.tab==5?'page':'false');$('settingLink').setAttribute('aria-label',S.tab==5?'設定を表示中':'設定を開く');if(S.tab==7&&LED_EDIT){updateRecordAmounts('e');$('eshareHint').textContent=recordEditShareHint()}k||scrollTo(0,0);if(ac)T('固定費'+ac+'件を記録に追加しました')}
 boot();
